@@ -1,0 +1,3530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema 911 - Gestión de Cámaras (Edición Completa)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        /* Estilos existentes del sistema original */
+        .mobile-optimized {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .camera-card {
+            transition: all 0.3s ease;
+        }
+        
+        .camera-card:active {
+            transform: scale(0.98);
+        }
+        
+        .modal-content {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Mapa responsivo */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .btn-mobile {
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+            
+            .text-mobile {
+                font-size: 16px;
+            }
+            
+            #map {
+                height: 300px;
+            }
+        }
+        
+        /* Indicadores visuales */
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-active { background-color: #10B981; }
+        .status-inactive { background-color: #EF4444; }
+        .status-warning { background-color: #F59E0B; }
+        
+        /* Animaciones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Acordeones y desplegables */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .accordion-content.open {
+            max-height: 5000px;
+        }
+        
+        /* Mejoras visuales para cascadas */
+        .cascade-item {
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .cascade-item:hover {
+            transform: translateX(5px);
+        }
+        
+        /* Scroll suave */
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+        
+        /* Líneas de conexión en cascadas */
+        .cascade-connection {
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .cascade-connection::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #3B82F6, #8B5CF6);
+        }
+        
+        .cascade-node {
+            position: relative;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #E5E7EB;
+        }
+        
+        .cascade-node::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3B82F6;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #3B82F6;
+        }
+        
+        .cascade-node.principal::before {
+            background: #F59E0B;
+            box-shadow: 0 0 0 2px #F59E0B;
+        }
+        
+        /* Flechas de dirección */
+        .connection-arrow {
+            position: absolute;
+            left: -18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #3B82F6;
+            font-size: 12px;
+        }
+
+        /* Estilos nuevos para edición */
+        .editable-field {
+            border-bottom: 1px dashed #3B82F6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .editable-field:hover {
+            background-color: #EFF6FF;
+            border-bottom-style: solid;
+        }
+        
+        .edit-mode {
+            background-color: #FEF3C7 !important;
+        }
+        
+        /* Animaciones nuevas */
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        /* Botones de acción flotantes */
+        .action-buttons {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .action-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Indicador de cambios no guardados */
+        .unsaved-changes {
+            border-left: 4px solid #F59E0B;
+        }
+        
+        /* Modal de edición mejorado */
+        .edit-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        /* Tabs para edición */
+        .edit-tabs {
+            display: flex;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .edit-tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .edit-tab.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+            font-weight: 600;
+        }
+        
+        .edit-tab:hover {
+            background-color: #F9FAFB;
+        }
+        
+        /* Checkbox de selección */
+        .selection-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #D1D5DB;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .selection-checkbox:checked {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+        
+        .edit-tab-content {
+            display: none;
+        }
+        
+        .edit-tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header con indicador de cambios -->
+    <header class="bg-gradient-to-r from-orange-500 to-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-2 rounded-lg shadow-lg">
+                        <i class="fas fa-camera text-orange-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Sistema 911 - Gestión de Cámaras</h1>
+                        <p class="text-blue-100 text-sm">Sistema Completo con Edición y Almacenamiento</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="flex items-center gap-4">
+                        <div id="storage-status" class="text-sm">
+                            <i class="fas fa-database mr-1"></i>
+                            <span id="storage-used">0%</span> usado
+                        </div>
+                        <div id="auto-save-status" class="flex items-center">
+                            <div class="w-2 h-2 rounded-full bg-green-500 mr-2 pulse-animation"></div>
+                            <span class="text-xs">Autoguardado activo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Barra de herramientas de edición -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-2">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <button 
+                        onclick="toggleEditMode()"
+                        id="edit-mode-toggle"
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                    >
+                        <i class="fas fa-edit"></i>
+                        <span>Modo Edición</span>
+                    </button>
+                    
+                    <div class="h-6 w-px bg-gray-300"></div>
+                    
+                    <button 
+                        onclick="showBulkEditModal()"
+                        id="bulk-edit-btn"
+                        class="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition hidden"
+                    >
+                        <i class="fas fa-edit"></i>
+                        <span>Editar Seleccionadas (<span id="selected-count">0</span>)</span>
+                    </button>
+                    
+                    <button 
+                        onclick="deleteSelectedCameras()"
+                        id="bulk-delete-btn"
+                        class="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition hidden"
+                    >
+                        <i class="fas fa-trash"></i>
+                        <span>Eliminar Seleccionadas</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div id="unsaved-changes-indicator" class="hidden">
+                        <span class="text-sm text-orange-600 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Hay cambios sin guardar</span>
+                        </span>
+                    </div>
+                    
+                    <button 
+                        onclick="saveAllChanges()"
+                        id="save-all-btn"
+                        class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    >
+                        <i class="fas fa-save"></i>
+                        <span>Guardar Todo</span>
+                    </button>
+                    
+                    <div class="relative">
+                        <button 
+                            onclick="toggleToolsMenu()"
+                            class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        >
+                            <i class="fas fa-tools"></i>
+                            <span>Herramientas</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="tools-menu" class="hidden absolute right-0 mt-1 bg-white rounded-lg shadow-lg border min-w-[200px] z-50">
+                            <div class="p-2 space-y-1">
+                                <button onclick="exportToCSV()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-file-export text-blue-500"></i>
+                                    <span>Exportar a CSV</span>
+                                </button>
+                                <button onclick="exportToJSON()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-file-code text-green-500"></i>
+                                    <span>Exportar a JSON</span>
+                                </button>
+                                <button onclick="importFromFile()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-file-import text-purple-500"></i>
+                                    <span>Importar desde archivo</span>
+                                </button>
+                                <div class="border-t my-1"></div>
+                                <button onclick="showBackupManager()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-history text-yellow-500"></i>
+                                    <span>Administrar respaldos</span>
+                                </button>
+                                <button onclick="showHistoryModal()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-history text-gray-500"></i>
+                                    <span>Ver historial</span>
+                                </button>
+                                <button onclick="resetToDefault()" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded flex items-center gap-2">
+                                    <i class="fas fa-undo text-red-500"></i>
+                                    <span>Restaurar valores por defecto</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de estado en tiempo real -->
+    <div class="bg-blue-600 text-white py-2">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-wrap items-center justify-between text-sm">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center">
+                        <span class="status-indicator status-active pulse-animation"></span>
+                        <span id="active-now">0</span> activas ahora
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-city mr-1"></i>
+                        <span id="municipios-count">0</span> municipios activos
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-project-diagram mr-1"></i>
+                        <span id="cascadas-count">0</span> cascadas monitoreadas
+                    </span>
+                </div>
+                <div id="last-update" class="text-blue-100">
+                    Actualizado: <span id="update-time">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles principales móviles -->
+    <div class="lg:hidden bg-white shadow-sm border-b">
+        <div class="p-3 grid grid-cols-2 gap-2">
+            <button onclick="toggleFilters()" class="bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2 btn-mobile">
+                <i class="fas fa-filter"></i>
+                <span id="filters-text">Filtros</span>
+            </button>
+            <button onclick="showMapModal()" class="bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2 btn-mobile">
+                <i class="fas fa-map"></i>
+                Mapa
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-3 py-4">
+        <div class="flex flex-col lg:flex-row gap-4">
+            <!-- Panel de Filtros Inteligentes -->
+            <div id="filters-panel" class="hidden lg:block lg:w-1/4">
+                <div class="bg-white rounded-lg shadow-lg p-4 sticky top-4 smooth-scroll">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-filter text-orange-500"></i>
+                            <h2 class="text-lg font-bold text-gray-800">Filtros Inteligentes</h2>
+                        </div>
+                        <button onclick="resetFilters()" class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                            <i class="fas fa-times"></i>
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Búsqueda rápida -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-search mr-1"></i>Búsqueda Rápida
+                            </label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                <input 
+                                    type="text"
+                                    id="search-input"
+                                    oninput="applyFilters()"
+                                    placeholder="Código, IP, dirección..."
+                                    class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-mobile"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Filtro de Estado -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-power-off mr-1"></i>Estado
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button 
+                                    id="filter-all" 
+                                    onclick="setStatusFilter('all')"
+                                    class="py-2 px-3 rounded-lg font-semibold text-sm transition bg-orange-500 text-white"
+                                >
+                                    Todas
+                                </button>
+                                <button 
+                                    id="filter-active" 
+                                    onclick="setStatusFilter('active')"
+                                    class="py-2 px-3 rounded-lg font-semibold text-sm transition bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                >
+                                    Activas
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filtro Jerárquico: Departamento -> Municipio -> Sitio -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-semibold text-gray-700">
+                                <i class="fas fa-sitemap mr-1"></i>Filtro Jerárquico
+                            </label>
+                            
+                            <!-- Departamento -->
+                            <div class="accordion">
+                                <button class="flex justify-between items-center w-full p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition" onclick="toggleAccordion('dept-accordion')">
+                                    <span class="font-semibold text-blue-700">Departamento</span>
+                                    <i class="fas fa-chevron-down text-blue-500 transition" id="dept-chevron"></i>
+                                </button>
+                                <div class="accordion-content mt-2" id="dept-accordion">
+                                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                                        <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                            <input type="radio" name="departamento" value="all" checked onchange="onDepartamentoChange()" class="mr-3">
+                                            <span>Todos los departamentos</span>
+                                        </label>
+                                        <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                            <input type="radio" name="departamento" value="Copán" onchange="onDepartamentoChange()" class="mr-3">
+                                            <span>Copán</span>
+                                            <span class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">421 cámaras</span>
+                                        </label>
+                                        <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                            <input type="radio" name="departamento" value="Lempira" onchange="onDepartamentoChange()" class="mr-3">
+                                            <span>Lempira</span>
+                                            <span class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">47 cámaras</span>
+                                        </label>
+                                        <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                            <input type="radio" name="departamento" value="Ocotepeque" onchange="onDepartamentoChange()" class="mr-3">
+                                            <span>Ocotepeque</span>
+                                            <span class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">23 cámaras</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Municipio -->
+                            <div class="accordion">
+                                <button class="flex justify-between items-center w-full p-3 bg-green-50 rounded-lg hover:bg-green-100 transition" onclick="toggleAccordion('mun-accordion')" id="mun-button" disabled>
+                                    <span class="font-semibold text-green-700">Municipio</span>
+                                    <i class="fas fa-chevron-down text-green-500 transition" id="mun-chevron"></i>
+                                </button>
+                                <div class="accordion-content mt-2" id="mun-accordion">
+                                    <div class="space-y-2 max-h-60 overflow-y-auto" id="municipios-list">
+                                        <!-- Los municipios se cargarán dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sitio -->
+                            <div class="accordion">
+                                <button class="flex justify-between items-center w-full p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition" onclick="toggleAccordion('site-accordion')" id="site-button" disabled>
+                                    <span class="font-semibold text-purple-700">Sitio</span>
+                                    <i class="fas fa-chevron-down text-purple-500 transition" id="site-chevron"></i>
+                                </button>
+                                <div class="accordion-content mt-2" id="site-accordion">
+                                    <div class="space-y-2 max-h-60 overflow-y-auto" id="sitios-list">
+                                        <!-- Los sitios se cargarán dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filtro de Cascadas/Anillos -->
+                        <div class="accordion">
+                            <button class="flex justify-between items-center w-full p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition" onclick="toggleAccordion('cascade-accordion')">
+                                <span class="font-semibold text-yellow-700">Cascadas/Anillos</span>
+                                <i class="fas fa-chevron-down text-yellow-500 transition" id="cascade-chevron"></i>
+                            </button>
+                            <div class="accordion-content mt-2" id="cascade-accordion">
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="cascada" value="all" checked onchange="applyFilters()" class="mr-3">
+                                        <span>Todas las cascadas</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="cascada" value="no-cascade" onchange="applyFilters()" class="mr-3">
+                                        <span>Sin cascada asignada</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="cascada" value="principal" onchange="applyFilters()" class="mr-3">
+                                        <span>Cascadas principales</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="cascada" value="anillo" onchange="applyFilters()" class="mr-3">
+                                        <span>Sistemas de anillo</span>
+                                    </label>
+                                    <!-- Cascadas específicas se cargarán dinámicamente -->
+                                    <div id="cascadas-especificas" class="space-y-2"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Cámara -->
+                        <div class="accordion">
+                            <button class="flex justify-between items-center w-full p-3 bg-red-50 rounded-lg hover:bg-red-100 transition" onclick="toggleAccordion('type-accordion')">
+                                <span class="font-semibold text-red-700">Tipo de Cámara</span>
+                                <i class="fas fa-chevron-down text-red-500 transition" id="type-chevron"></i>
+                            </button>
+                            <div class="accordion-content mt-2" id="type-accordion">
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="all" checked onchange="applyFilters()" class="mr-3">
+                                        <span>Todos los tipos</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="F1" onchange="applyFilters()" class="mr-3">
+                                        <span>F1 - Fija HD</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="F2" onchange="applyFilters()" class="mr-3">
+                                        <span>F2 - Fija 4K</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="F3" onchange="applyFilters()" class="mr-3">
+                                        <span>F3 - Fija 360°</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="P1" onchange="applyFilters()" class="mr-3">
+                                        <span>P1 - PTZ Motorizada</span>
+                                    </label>
+                                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                        <input type="radio" name="tipo" value="L1" onchange="applyFilters()" class="mr-3">
+                                        <span>L1 - LPR (Reconocimiento)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen de Filtros Activos -->
+                    <div id="active-filters" class="mt-6 p-3 bg-gray-50 rounded-lg border hidden">
+                        <h4 class="font-semibold text-gray-800 text-sm mb-2">Filtros Activos:</h4>
+                        <div id="filters-list" class="text-xs text-gray-600 space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- Mapa Miniatura -->
+                <div class="bg-white rounded-lg shadow-lg p-4 mt-4 hidden lg:block">
+                    <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-map-marked-alt text-green-500"></i>
+                        Vista Rápida del Mapa
+                    </h3>
+                    <div id="mini-map" style="height: 200px; border-radius: 8px;"></div>
+                    <button onclick="showMapModal()" class="w-full mt-3 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fas fa-expand"></i>
+                        Ver Mapa Completo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenido Principal -->
+            <div class="w-full lg:w-3/4">
+                <!-- Resumen con estadísticas de edición -->
+                <div class="bg-white rounded-lg shadow-lg p-4 mb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-3 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" id="total-cameras">0</div>
+                            <div class="text-sm text-blue-700">Cámaras Totales</div>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="modified-count">0</div>
+                            <div class="text-sm text-green-700">Modificadas</div>
+                        </div>
+                        <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600" id="new-count">0</div>
+                            <div class="text-sm text-yellow-700">Nuevas</div>
+                        </div>
+                        <div class="text-center p-3 bg-red-50 rounded-lg">
+                            <div class="text-2xl font-bold text-red-600" id="deleted-count">0</div>
+                            <div class="text-sm text-red-700">Eliminadas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de Selección Actual -->
+                <div id="selection-info" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg shadow-lg p-4 mb-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold" id="selected-title">Sistema Nacional de Cámaras 911</h2>
+                            <p class="text-blue-100" id="selected-details">0 cámaras desplegadas</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" id="showing-count">0</div>
+                            <div class="text-sm text-blue-100">Cámaras mostradas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas por Departamento/Municipio -->
+                <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <!-- Las estadísticas se cargarán dinámicamente -->
+                </div>
+
+                <!-- Vista de Cámaras -->
+                <div id="cameras-view" class="space-y-4">
+                    <!-- La vista se cargará dinámicamente según el filtro seleccionado -->
+                </div>
+
+                <!-- Sin resultados -->
+                <div id="no-results" class="hidden bg-white rounded-lg shadow-lg p-8 text-center">
+                    <i class="fas fa-exclamation-triangle text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">No se encontraron cámaras</h3>
+                    <p class="text-gray-500 mb-4">Intenta ajustar los filtros para ver más resultados</p>
+                    <button 
+                        onclick="resetFilters()"
+                        class="bg-orange-500 hover:bg-orange-600 text-white py-3 px-6 rounded-lg transition duration-200 btn-mobile"
+                    >
+                        Restablecer filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción flotantes -->
+    <div class="action-buttons">
+        <button onclick="addNewCamera()" class="action-button bg-blue-500 text-white" title="Agregar nueva cámara">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button onclick="quickEdit()" class="action-button bg-green-500 text-white" title="Edición rápida">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button onclick="saveAllChanges()" class="action-button bg-purple-500 text-white" title="Guardar todo">
+            <i class="fas fa-save"></i>
+        </button>
+    </div>
+
+    <!-- ===== MODALES EXISTENTES DEL SISTEMA ORIGINAL ===== -->
+
+    <!-- Modal de Mapa Completo -->
+    <div id="map-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 modal-content">
+        <div class="bg-white rounded-lg shadow-xl w-full h-full max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Mapa Interactivo - Sistema de Cámaras 911</h2>
+                    <button onclick="closeMapModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-4 mt-2 text-sm">
+                    <div class="flex items-center">
+                        <span class="status-indicator status-active mr-1"></span>
+                        <span>Cámara Activa</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="status-indicator status-inactive mr-1"></span>
+                        <span>Cámara Inactiva</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-crown text-yellow-400 mr-1"></i>
+                        <span>Cascada Principal</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-route text-purple-400 mr-1"></i>
+                        <span>Ruta de Cascada</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex-1 p-4">
+                <div id="map" class="w-full h-full"></div>
+            </div>
+
+            <div class="bg-gray-50 p-4 border-t">
+                <div class="flex justify-between items-center">
+                    <div id="map-info" class="text-sm text-gray-600">
+                        Selecciona una cámara en el mapa para ver detalles
+                    </div>
+                    <button onclick="closeMapModal()" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition">
+                        Cerrar Mapa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Información de Sitio -->
+    <div id="site-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 modal-content">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold" id="site-modal-title">Información del Sitio</h2>
+                    <button onclick="closeSiteModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- Información General del Sitio -->
+                <div id="site-general-info">
+                    <!-- Se carga dinámicamente -->
+                </div>
+
+                <!-- Información de Cascada/Anillo -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-purple-500"></i>
+                        Información de Cascada/Anillo
+                    </h3>
+                    <div id="site-cascade-info">
+                        <!-- Se carga dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Ayuda Técnica -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tools text-orange-500"></i>
+                        Ayuda Técnica - Configuración de Red
+                    </h3>
+                    <div id="site-tech-help">
+                        <!-- Se carga dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Cámaras del Sitio -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-camera text-blue-500"></i>
+                        Cámaras en este Sitio
+                    </h3>
+                    <div id="site-cameras-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Se carga dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4 border-t">
+                    <button
+                        onclick="closeSiteModal()"
+                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition"
+                    >
+                        Cerrar
+                    </button>
+                    <button
+                        onclick="configureCascade()"
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                    >
+                        <i class="fas fa-cog"></i>
+                        Configurar Cascada
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración de Cascada -->
+    <div id="cascade-config-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 modal-content">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Configurar Orden de Cascada</h2>
+                    <button onclick="closeCascadeConfigModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-semibold text-yellow-800">Configuración de Cascada</h4>
+                            <p class="text-yellow-700 text-sm mt-1">
+                                Define el orden de los sitios en la cascada y marca cuál es el sitio principal.
+                                Esto ayudará a visualizar las rutas de conexión en el mapa.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Cascada</label>
+                    <input type="text" id="cascade-name" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Ej: CASCADA PRINCIPAL, ANILLO 1.1, etc.">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Sitios en la Cascada (Arrastra para ordenar)</label>
+                    <div id="cascade-sites-order" class="space-y-2 border-2 border-dashed border-gray-300 rounded-lg p-4 min-h-[200px]">
+                        <!-- Los sitios se cargarán aquí de forma arrastrable -->
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">Instrucciones:</h4>
+                    <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                        <li>Arrastra los sitios para definir el orden de la cascada</li>
+                        <li>Marca el sitio principal de la cascada</li>
+                        <li>El orden definirá la ruta visual en el mapa</li>
+                        <li>Guarda los cambios para actualizar las conexiones</li>
+                    </ul>
+                </div>
+
+                <div class="flex gap-4">
+                    <button
+                        onclick="saveCascadeConfig()"
+                        class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                    >
+                        <i class="fas fa-save"></i>
+                        Guardar Configuración
+                    </button>
+                    <button
+                        onclick="closeCascadeConfigModal()"
+                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== NUEVOS MODALES DE EDICIÓN ===== -->
+
+    <!-- Modal de Edición Individual de Cámara -->
+    <div id="edit-camera-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold" id="edit-modal-title">Editar Cámara</h2>
+                    <button onclick="closeEditCameraModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="edit-tabs mb-6">
+                    <button class="edit-tab active" data-tab="basic">Información Básica</button>
+                    <button class="edit-tab" data-tab="network">Configuración de Red</button>
+                    <button class="edit-tab" data-tab="location">Ubicación</button>
+                    <button class="edit-tab" data-tab="advanced">Avanzado</button>
+                </div>
+                
+                <form id="edit-camera-form">
+                    <input type="hidden" id="edit-camera-id">
+                    <input type="hidden" id="edit-camera-original">
+                    
+                    <div id="edit-basic-tab" class="edit-tab-content active">
+                        <div class="edit-modal-grid">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Código de Cámara *</label>
+                                <input type="text" id="edit-code" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Cámara *</label>
+                                <select id="edit-tipo" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                    <option value="F1">F1 - Fija HD</option>
+                                    <option value="F2">F2 - Fija 4K</option>
+                                    <option value="F3">F3 - Fija 360°</option>
+                                    <option value="P1">P1 - PTZ Motorizada</option>
+                                    <option value="L1">L1 - LPR (Reconocimiento)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Departamento *</label>
+                                <select id="edit-departamento" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required onchange="updateMunicipiosEdit()">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Copán">Copán</option>
+                                    <option value="Lempira">Lempira</option>
+                                    <option value="Ocotepeque">Ocotepeque</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Municipio *</label>
+                                <select id="edit-municipio" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                    <option value="">Seleccionar departamento primero</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Sitio *</label>
+                                <input type="text" id="edit-sitio" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+                                <div class="flex items-center space-x-4 mt-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="edit-status" value="active" class="mr-2">
+                                        <span>Activa</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="edit-status" value="inactive" class="mr-2">
+                                        <span>Inactiva</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="edit-status" value="maintenance" class="mr-2">
+                                        <span>Mantenimiento</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="edit-network-tab" class="edit-tab-content">
+                        <div class="edit-modal-grid">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección IP *</label>
+                                <input type="text" id="edit-ip" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Gateway *</label>
+                                <input type="text" id="edit-gateway" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Switch *</label>
+                                <input type="text" id="edit-switch" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Computadora Técnica</label>
+                                <input type="text" id="edit-computer" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Notas de Red</label>
+                                <textarea id="edit-network-notes" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="edit-location-tab" class="edit-tab-content">
+                        <div class="edit-modal-grid">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección Física *</label>
+                                <input type="text" id="edit-direccion" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Latitud</label>
+                                <input type="number" step="any" id="edit-lat" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Longitud</label>
+                                <input type="number" step="any" id="edit-lng" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <button type="button" onclick="getCurrentLocation()" class="mt-6 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
+                                    <i class="fas fa-location-arrow"></i>
+                                    Obtener ubicación actual
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="edit-advanced-tab" class="edit-tab-content">
+                        <div class="edit-modal-grid">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cascada/Anillo</label>
+                                <select id="edit-cascada" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Sin cascada</option>
+                                    <option value="CASCADA PRINCIPAL">CASCADA PRINCIPAL</option>
+                                    <option value="SITIO ÚNICO">SITIO ÚNICO</option>
+                                    <option value="Anillo 1.1">Anillo 1.1</option>
+                                    <option value="Anillo 4.1">Anillo 4.1</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Es Principal en Cascada</label>
+                                <div class="mt-2">
+                                    <input type="checkbox" id="edit-esPrincipal" class="h-5 w-5">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Modelo de Cámara</label>
+                                <input type="text" id="edit-modelo" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Instalación</label>
+                                <input type="date" id="edit-fecha-instalacion" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                                <textarea id="edit-observaciones" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 pt-6 mt-6 border-t">
+                        <button type="button" onclick="saveCameraEdit()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i>
+                            Guardar Cambios
+                        </button>
+                        <button type="button" onclick="closeEditCameraModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="duplicateCamera()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                            <i class="fas fa-copy"></i>
+                            Duplicar
+                        </button>
+                        <button type="button" onclick="deleteCamera()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                            <i class="fas fa-trash"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición Masiva -->
+    <div id="bulk-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Edición Masiva</h2>
+                    <button onclick="closeBulkEditModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="text-yellow-100 mt-2" id="bulk-edit-count">Editando 0 cámaras</p>
+            </div>
+            
+            <div class="p-6">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Campos a Modificar</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="bulk-edit-status" class="mr-3 h-5 w-5">
+                            <label for="bulk-edit-status" class="text-gray-700">Estado</label>
+                            <select id="bulk-status-value" class="ml-auto px-3 py-1 border rounded hidden">
+                                <option value="active">Activa</option>
+                                <option value="inactive">Inactiva</option>
+                                <option value="maintenance">Mantenimiento</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="bulk-edit-cascada" class="mr-3 h-5 w-5">
+                            <label for="bulk-edit-cascada" class="text-gray-700">Cascada/Anillo</label>
+                            <select id="bulk-cascada-value" class="ml-auto px-3 py-1 border rounded hidden">
+                                <option value="">Sin cascada</option>
+                                <option value="CASCADA PRINCIPAL">CASCADA PRINCIPAL</option>
+                                <option value="Anillo 1.1">Anillo 1.1</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="bulk-edit-notas" class="mr-3 h-5 w-5">
+                            <label for="bulk-edit-notas" class="text-gray-700">Agregar nota</label>
+                            <input type="text" id="bulk-notas-value" placeholder="Nota a agregar" class="ml-auto px-3 py-1 border rounded hidden w-48">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-semibold text-yellow-800">Precaución</h4>
+                            <p class="text-yellow-700 text-sm mt-1">
+                                Los cambios se aplicarán a todas las cámaras seleccionadas. Esta acción no se puede deshacer.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button onclick="applyBulkEdit()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                        Aplicar Cambios
+                    </button>
+                    <button onclick="closeBulkEditModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Administración de Respaldo -->
+    <div id="backup-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Administrador de Respaldo</h2>
+                    <button onclick="closeBackupModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Crear Respaldo</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Respaldo</label>
+                                <input type="text" id="backup-name" placeholder="Respaldo del día..." class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                                <textarea id="backup-description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea>
+                            </div>
+                            <button onclick="createBackup()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                                Crear Respaldo Ahora
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Respaldos Existentes</h3>
+                        <div id="backup-list" class="space-y-2 max-h-60 overflow-y-auto">
+                            <!-- Se cargará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Configuración de Autorespaldo</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="auto-backup-enabled" class="mr-3 h-5 w-5">
+                            <label for="auto-backup-enabled" class="text-gray-700">Habilitar autorespaldo</label>
+                        </div>
+                        <div id="auto-backup-settings" class="space-y-3 hidden">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Frecuencia</label>
+                                <select id="backup-frequency" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                                    <option value="daily">Diariamente</option>
+                                    <option value="weekly">Semanalmente</option>
+                                    <option value="monthly">Mensualmente</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Máximo de respaldos</label>
+                                <input type="number" id="max-backups" min="1" max="50" value="10" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button onclick="saveBackupSettings()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                        Guardar Configuración
+                    </button>
+                    <button onclick="closeBackupModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Historial de Cambios -->
+    <div id="history-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">Historial de Cambios</h2>
+                    <button onclick="closeHistoryModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div id="history-list" class="space-y-4">
+                    <!-- Se cargará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input oculto para importar archivos -->
+    <input type="file" id="file-import" accept=".json,.csv" class="hidden">
+
+    <!-- Script principal completo -->
+    <script>
+        // ============================================
+        // SISTEMA DE ALMACENAMIENTO PERSISTENTE
+        // ============================================
+
+        const STORAGE_KEYS = {
+            CAMERAS: '911_cameras_data',
+            BACKUPS: '911_cameras_backups',
+            SETTINGS: '911_system_settings',
+            HISTORY: '911_change_history',
+            CASCADAS: '911_cascadas_data'
+        };
+
+        // Estructura de datos inicial
+        const estructuraDatos = {
+            departamentos: {
+                "Copán": {
+                    totalCamaras: 421,
+                    municipios: {
+                        "Santa Rosa de Copán": { camaras: 205, sitios: 56 },
+                        "La Entrada": { camaras: 63, sitios: 32 },
+                        "Copán Ruinas": { camaras: 33, sitios: 12 },
+                        "La Unión": { camaras: 14, sitios: 4 },
+                        "Cucuyagua": { camaras: 21, sitios: 6 },
+                        "San Pedro Copán": { camaras: 7, sitios: 3 },
+                        "Corquín": { camaras: 29, sitios: 8 },
+                        "Florida": { camaras: 15, sitios: 5 },
+                        "El Paraíso": { camaras: 14, sitios: 6 }
+                    }
+                },
+                "Lempira": {
+                    totalCamaras: 47,
+                    municipios: {
+                        "Gracias Lempira": { camaras: 47, sitios: 18 }
+                    }
+                },
+                "Ocotepeque": {
+                    totalCamaras: 23,
+                    municipios: {
+                        "Ocotepeque": { camaras: 23, sitios: 8 }
+                    }
+                }
+            }
+        };
+
+        // Variables globales
+        let camerasData = [];
+        let filteredCameras = [];
+        let selectedCameras = new Set();
+        let editMode = false;
+        let unsavedChanges = false;
+        let currentViewMode = 'municipio';
+        let editingCamera = null;
+        let showFiltersMobile = false;
+        let map = null;
+        let miniMap = null;
+        let markers = [];
+        let cascadeLines = [];
+        let currentSelection = {
+            departamento: 'all',
+            municipio: 'all',
+            sitio: 'all'
+        };
+        let currentSiteModal = null;
+        let cascadasData = {};
+
+        // ============================================
+        // FUNCIONES DE ALMACENAMIENTO
+        // ============================================
+
+        function loadFromStorage() {
+            // Cargar cámaras
+            const saved = localStorage.getItem(STORAGE_KEYS.CAMERAS);
+            if (saved) {
+                camerasData = JSON.parse(saved);
+                console.log(`Cargados ${camerasData.length} cámaras desde almacenamiento local`);
+            } else {
+                camerasData = generateDefaultData();
+                saveToStorage();
+            }
+            
+            // Cargar cascadas
+            const savedCascadas = localStorage.getItem(STORAGE_KEYS.CASCADAS);
+            if (savedCascadas) {
+                cascadasData = JSON.parse(savedCascadas);
+            } else {
+                cascadasData = {
+                    "CASCADA PRINCIPAL": {
+                        sitios: ["OCO 02", "OCO 03", "OCO 04", "OCO 05"],
+                        principal: "OCO 02",
+                        tipo: "principal"
+                    },
+                    "SITIO ÚNICO": {
+                        sitios: ["OCO 06"],
+                        principal: "OCO 06",
+                        tipo: "unico"
+                    },
+                    "Anillo 1.1": {
+                        sitios: ["SRC 02", "SRC 03", "SRC 04"],
+                        principal: "SRC 02",
+                        tipo: "anillo"
+                    },
+                    "Anillo 4.1": {
+                        sitios: ["SRC 01", "SRC 05", "SRC 06"],
+                        principal: "SRC 01",
+                        tipo: "anillo"
+                    }
+                };
+                localStorage.setItem(STORAGE_KEYS.CASCADAS, JSON.stringify(cascadasData));
+            }
+            
+            // Cargar configuración
+            const settings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+            if (settings) {
+                applySettings(JSON.parse(settings));
+            }
+            
+            updateStorageStatus();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEYS.CAMERAS, JSON.stringify(camerasData));
+            localStorage.setItem(STORAGE_KEYS.CASCADAS, JSON.stringify(cascadasData));
+            unsavedChanges = false;
+            updateUnsavedIndicator();
+            updateStorageStatus();
+            
+            // Crear respaldo automático si hay muchos cambios
+            createAutoBackup();
+        }
+
+        function createAutoBackup() {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+            const timestamp = new Date().toISOString();
+            
+            backups.push({
+                id: `auto_${timestamp}`,
+                name: `Autorespaldo ${new Date().toLocaleString()}`,
+                timestamp: timestamp,
+                data: JSON.parse(JSON.stringify(camerasData)),
+                cascadas: JSON.parse(JSON.stringify(cascadasData)),
+                type: 'auto'
+            });
+            
+            // Mantener máximo 50 respaldos automáticos
+            if (backups.length > 50) {
+                backups.splice(0, backups.length - 50);
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backups));
+        }
+
+        function createManualBackup(name, description) {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+            const timestamp = new Date().toISOString();
+            
+            backups.push({
+                id: `manual_${timestamp}`,
+                name: name || `Respaldo ${new Date().toLocaleString()}`,
+                description: description || '',
+                timestamp: timestamp,
+                data: JSON.parse(JSON.stringify(camerasData)),
+                cascadas: JSON.parse(JSON.stringify(cascadasData)),
+                type: 'manual'
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backups));
+            showNotification('Respaldo creado exitosamente', 'success');
+        }
+
+        function restoreBackup(backupId) {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+            const backup = backups.find(b => b.id === backupId);
+            
+            if (backup) {
+                if (confirm('¿Restaurar este respaldo? Se perderán los cambios no guardados.')) {
+                    camerasData = JSON.parse(JSON.stringify(backup.data));
+                    if (backup.cascadas) {
+                        cascadasData = JSON.parse(JSON.stringify(backup.cascadas));
+                    }
+                    saveToStorage();
+                    applyFilters();
+                    showNotification('Respaldo restaurado exitosamente', 'success');
+                }
+            }
+        }
+
+        function addToHistory(action, details) {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+            const entry = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details,
+                user: getCurrentUser()
+            };
+            
+            history.unshift(entry);
+            
+            // Mantener máximo 1000 entradas
+            if (history.length > 1000) {
+                history.pop();
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+        }
+
+        // ============================================
+        // FUNCIONES DEL SISTEMA ORIGINAL
+        // ============================================
+
+        function generateDefaultData() {
+            const datos = [];
+            let id = 1;
+            
+            Object.entries(estructuraDatos.departamentos).forEach(([dept, infoDept]) => {
+                Object.entries(infoDept.municipios).forEach(([municipio, infoMun]) => {
+                    for (let i = 1; i <= infoMun.camaras; i++) {
+                        const sitioNum = Math.min(Math.ceil(i / (infoMun.camaras / infoMun.sitios)), infoMun.sitios);
+                        const sitio = `${municipio.substring(0, 3).toUpperCase()} ${sitioNum.toString().padStart(2, '0')}`;
+                        
+                        // Determinar si pertenece a una cascada
+                        let cascada = "";
+                        let esPrincipal = false;
+                        
+                        Object.entries(cascadasData).forEach(([nombreCascada, infoCascada]) => {
+                            if (infoCascada.sitios.includes(sitio)) {
+                                cascada = nombreCascada;
+                                esPrincipal = infoCascada.principal === sitio;
+                            }
+                        });
+                        
+                        // Generar IPs realistas basadas en el patrón proporcionado
+                        const baseIP = `10.${41 + Math.floor(Math.random() * 30)}.${Math.floor(Math.random() * 10)}`;
+                        const lastOctet = 170 + (i % 30);
+                        const ip = `${baseIP}.${lastOctet}`;
+                        const gateway = `${baseIP}.${lastOctet - 1}`;
+                        const computer = `${baseIP}.${lastOctet + 1}`;
+                        
+                        datos.push({
+                            id: id++,
+                            ciudad: municipio,
+                            departamento: dept,
+                            sitio: sitio,
+                            code: `${sitioNum.toString().padStart(3, '0')}-${i}-${['F1','F2','P1','L1'][Math.floor(Math.random() * 4)]}`,
+                            ip: ip,
+                            gateway: gateway,
+                            computer: computer,
+                            switch: `${baseIP}.${lastOctet - 2}`,
+                            direccion: `Ubicación ${i} en ${municipio}`,
+                            nomenclatura: `${sitioNum.toString().padStart(3, '0')}-${i}-${municipio.substring(0, 3).toUpperCase()} ${municipio}`,
+                            coord_x: (-89 + Math.random() * 2).toFixed(6),
+                            coord_y: (14 + Math.random() * 2).toFixed(6),
+                            tipo_camara: ['F1','F2','F3','P1','L1'][Math.floor(Math.random() * 5)],
+                            activa: Math.random() > 0.1, // 90% activas
+                            cascada: cascada,
+                            esPrincipal: esPrincipal,
+                            modelo: ['Hikvision DS-2CD', 'Dahua IPC-HFW', 'Axis M30'][Math.floor(Math.random() * 3)],
+                            fecha_instalacion: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
+                            observaciones: Math.random() > 0.7 ? 'Requiere mantenimiento preventivo' : ''
+                        });
+                    }
+                });
+            });
+            
+            return datos;
+        }
+
+        // Inicializar la aplicación
+        function init() {
+            loadCascadasEspecificas();
+            updateStats();
+            renderMunicipiosView();
+            updateCounts();
+            initMiniMap();
+            startRealTimeUpdates();
+            
+            // Configurar tabs de edición
+            document.querySelectorAll('.edit-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchEditTab(tabName);
+                });
+            });
+        }
+
+        // Cargar cascadas específicas en los filtros
+        function loadCascadasEspecificas() {
+            const cascadas = [...new Set(camerasData.filter(c => c.cascada).map(c => c.cascada))];
+            const container = document.getElementById('cascadas-especificas');
+            container.innerHTML = '';
+            
+            cascadas.forEach(cascada => {
+                const count = camerasData.filter(c => c.cascada === cascada).length;
+                const label = document.createElement('label');
+                label.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+                label.innerHTML = `
+                    <input type="radio" name="cascada" value="${cascada}" onchange="applyFilters()" class="mr-3">
+                    <span>${cascada}</span>
+                    <span class="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded">${count} cam</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        // Alternar acordeones
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const chevron = document.getElementById(id.replace('accordion', 'chevron'));
+            
+            content.classList.toggle('open');
+            chevron.classList.toggle('fa-chevron-down');
+            chevron.classList.toggle('fa-chevron-up');
+        }
+
+        // Manejar cambio de departamento
+        function onDepartamentoChange() {
+            const departamento = document.querySelector('input[name="departamento"]:checked').value;
+            const munButton = document.getElementById('mun-button');
+            const munAccordion = document.getElementById('mun-accordion');
+            
+            currentSelection.departamento = departamento;
+            currentSelection.municipio = 'all';
+            currentSelection.sitio = 'all';
+            
+            if (departamento !== 'all') {
+                munButton.disabled = false;
+                cargarMunicipios(departamento);
+                if (!munAccordion.classList.contains('open')) {
+                    toggleAccordion('mun-accordion');
+                }
+            } else {
+                munButton.disabled = true;
+                document.getElementById('municipios-list').innerHTML = '';
+                document.getElementById('site-button').disabled = true;
+                document.getElementById('sitios-list').innerHTML = '';
+            }
+            
+            applyFilters();
+        }
+
+        // Cargar municipios basado en departamento seleccionado
+        function cargarMunicipios(departamento) {
+            const container = document.getElementById('municipios-list');
+            container.innerHTML = '';
+            
+            const municipios = estructuraDatos.departamentos[departamento].municipios;
+            
+            // Agregar opción "Todos los municipios"
+            const allLabel = document.createElement('label');
+            allLabel.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+            allLabel.innerHTML = `
+                <input type="radio" name="municipio" value="all" checked onchange="onMunicipioChange()" class="mr-3">
+                <span>Todos los municipios</span>
+                <span class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">${estructuraDatos.departamentos[departamento].totalCamaras} cam</span>
+            `;
+            container.appendChild(allLabel);
+            
+            // Agregar cada municipio
+            Object.entries(municipios).forEach(([municipio, info]) => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+                label.innerHTML = `
+                    <input type="radio" name="municipio" value="${municipio}" onchange="onMunicipioChange()" class="mr-3">
+                    <span>${municipio}</span>
+                    <span class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">${info.camaras} cam</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        // Manejar cambio de municipio
+        function onMunicipioChange() {
+            const municipio = document.querySelector('input[name="municipio"]:checked').value;
+            const siteButton = document.getElementById('site-button');
+            const siteAccordion = document.getElementById('site-accordion');
+            
+            currentSelection.municipio = municipio;
+            currentSelection.sitio = 'all';
+            
+            if (municipio !== 'all' && currentSelection.departamento !== 'all') {
+                siteButton.disabled = false;
+                cargarSitios(currentSelection.departamento, municipio);
+                if (!siteAccordion.classList.contains('open')) {
+                    toggleAccordion('site-accordion');
+                }
+            } else {
+                siteButton.disabled = true;
+                document.getElementById('sitios-list').innerHTML = '';
+            }
+            
+            applyFilters();
+        }
+
+        // Cargar sitios basado en municipio seleccionado
+        function cargarSitios(departamento, municipio) {
+            const container = document.getElementById('sitios-list');
+            container.innerHTML = '';
+            
+            const sitios = [...new Set(camerasData
+                .filter(c => c.departamento === departamento && c.ciudad === municipio)
+                .map(c => c.sitio))];
+            
+            // Agregar opción "Todos los sitios"
+            const allLabel = document.createElement('label');
+            allLabel.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+            allLabel.innerHTML = `
+                <input type="radio" name="sitio" value="all" checked onchange="onSitioChange()" class="mr-3">
+                <span>Todos los sitios</span>
+            `;
+            container.appendChild(allLabel);
+            
+            // Agregar cada sitio
+            sitios.forEach(sitio => {
+                const count = camerasData.filter(c => c.sitio === sitio).length;
+                const label = document.createElement('label');
+                label.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+                label.innerHTML = `
+                    <input type="radio" name="sitio" value="${sitio}" onchange="onSitioChange()" class="mr-3">
+                    <span>${sitio}</span>
+                    <span class="ml-2 text-xs bg-purple-500 text-white px-2 py-1 rounded">${count} cam</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        // Manejar cambio de sitio
+        function onSitioChange() {
+            currentSelection.sitio = document.querySelector('input[name="sitio"]:checked').value;
+            applyFilters();
+        }
+
+        // Establecer filtro de estado
+        function setStatusFilter(status) {
+            document.getElementById('filter-all').className = 
+                `py-2 px-3 rounded-lg font-semibold text-sm transition ${status === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`;
+            document.getElementById('filter-active').className = 
+                `py-2 px-3 rounded-lg font-semibold text-sm transition ${status === 'active' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`;
+            
+            applyFilters();
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const status = document.getElementById('filter-active').classList.contains('bg-orange-500') ? 'active' : 'all';
+            const departamento = currentSelection.departamento;
+            const municipio = currentSelection.municipio;
+            const sitio = currentSelection.sitio;
+            const cascada = document.querySelector('input[name="cascada"]:checked')?.value || 'all';
+            const tipo = document.querySelector('input[name="tipo"]:checked')?.value || 'all';
+
+            filteredCameras = camerasData.filter(camera => {
+                const matchesSearch = !search || 
+                    camera.direccion.toLowerCase().includes(search) ||
+                    camera.ip.includes(search) ||
+                    camera.nomenclatura.toLowerCase().includes(search) ||
+                    camera.code.toLowerCase().includes(search) ||
+                    (camera.cascada && camera.cascada.toLowerCase().includes(search));
+
+                const matchesStatus = status === 'all' || 
+                    (status === 'active' && camera.activa);
+
+                const matchesDepartamento = departamento === 'all' || camera.departamento === departamento;
+                const matchesMunicipio = municipio === 'all' || camera.ciudad === municipio;
+                const matchesSitio = sitio === 'all' || camera.sitio === sitio;
+                const matchesTipo = tipo === 'all' || camera.tipo_camara === tipo;
+
+                let matchesCascada = true;
+                if (cascada === 'principal') {
+                    matchesCascada = camera.esPrincipal;
+                } else if (cascada === 'anillo') {
+                    matchesCascada = camera.cascada && camera.cascada.toLowerCase().includes('anillo');
+                } else if (cascada === 'no-cascade') {
+                    matchesCascada = !camera.cascada;
+                } else if (cascada !== 'all') {
+                    matchesCascada = camera.cascada === cascada;
+                }
+
+                return matchesSearch && matchesStatus && matchesDepartamento && 
+                       matchesMunicipio && matchesSitio && matchesTipo && matchesCascada;
+            });
+
+            updateActiveFilters();
+            renderMunicipiosView();
+            updateCounts();
+            updateSelectionInfo();
+            updateMiniMap();
+        }
+
+        // Actualizar información de filtros activos
+        function updateActiveFilters() {
+            const activeFilters = document.getElementById('active-filters');
+            const filtersList = document.getElementById('filters-list');
+            
+            const filters = [];
+            const search = document.getElementById('search-input').value;
+            const status = document.getElementById('filter-active').classList.contains('bg-orange-500') ? 'active' : 'all';
+            const departamento = currentSelection.departamento;
+            const municipio = currentSelection.municipio;
+            const sitio = currentSelection.sitio;
+            const cascada = document.querySelector('input[name="cascada"]:checked')?.value || 'all';
+            const tipo = document.querySelector('input[name="tipo"]:checked')?.value || 'all';
+
+            if (search) filters.push(`Búsqueda: "${search}"`);
+            if (status !== 'all') filters.push(`Estado: Activas`);
+            if (departamento !== 'all') filters.push(`Departamento: ${departamento}`);
+            if (municipio !== 'all') filters.push(`Municipio: ${municipio}`);
+            if (sitio !== 'all') filters.push(`Sitio: ${sitio}`);
+            if (cascada !== 'all') {
+                let cascadeText = cascada;
+                if (cascada === 'principal') cascadeText = 'Cascadas Principales';
+                if (cascada === 'anillo') cascadeText = 'Sistemas de Anillo';
+                if (cascada === 'no-cascade') cascadeText = 'Sin Cascada';
+                filters.push(`Cascada: ${cascadeText}`);
+            }
+            if (tipo !== 'all') filters.push(`Tipo: ${tipo}`);
+
+            if (filters.length > 0) {
+                filtersList.innerHTML = filters.map(f => `<div>• ${f}</div>`).join('');
+                activeFilters.classList.remove('hidden');
+            } else {
+                activeFilters.classList.add('hidden');
+            }
+        }
+
+        // Actualizar información de selección
+        function updateSelectionInfo() {
+            const title = document.getElementById('selected-title');
+            const details = document.getElementById('selected-details');
+            const totalCameras = camerasData.length;
+            
+            if (currentSelection.departamento !== 'all') {
+                if (currentSelection.municipio !== 'all') {
+                    if (currentSelection.sitio !== 'all') {
+                        title.textContent = `Sitio: ${currentSelection.sitio}`;
+                        details.textContent = `${filteredCameras.length} cámaras en ${currentSelection.municipio}, ${currentSelection.departamento}`;
+                    } else {
+                        title.textContent = `Municipio: ${currentSelection.municipio}`;
+                        details.textContent = `${filteredCameras.length} cámaras en ${currentSelection.departamento}`;
+                    }
+                } else {
+                    title.textContent = `Departamento: ${currentSelection.departamento}`;
+                    details.textContent = `${filteredCameras.length} cámaras mostradas`;
+                }
+            } else {
+                title.textContent = 'Sistema Nacional de Cámaras 911';
+                const departamentosCount = Object.keys(estructuraDatos.departamentos).length;
+                details.textContent = `${filteredCameras.length} de ${totalCameras} cámaras desplegadas en ${departamentosCount} departamentos`;
+            }
+        }
+
+        // Renderizar vista por municipios
+        function renderMunicipiosView() {
+            const container = document.getElementById('cameras-view');
+            const noResults = document.getElementById('no-results');
+            const statsContainer = document.getElementById('stats-container');
+            
+            if (filteredCameras.length === 0) {
+                container.innerHTML = '';
+                statsContainer.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            
+            // Determinar qué vista mostrar basado en la selección actual
+            if (currentSelection.departamento === 'all') {
+                renderVistaDepartamentos(container, statsContainer);
+            } else if (currentSelection.municipio === 'all') {
+                renderVistaMunicipios(container, statsContainer);
+            } else if (currentSelection.sitio === 'all') {
+                renderVistaSitios(container, statsContainer);
+            } else {
+                renderVistaCamaras(container, statsContainer);
+            }
+        }
+
+        // Vista por departamentos
+        function renderVistaDepartamentos(container, statsContainer) {
+            statsContainer.innerHTML = '';
+            container.innerHTML = '';
+            
+            Object.entries(estructuraDatos.departamentos).forEach(([dept, info]) => {
+                const deptCameras = filteredCameras.filter(c => c.departamento === dept);
+                const activeCount = deptCameras.filter(c => c.activa).length;
+                const totalCount = deptCameras.length;
+                
+                if (totalCount === 0) return;
+                
+                // Estadísticas
+                const statCard = document.createElement('div');
+                statCard.className = 'bg-white rounded-lg shadow p-4 border-l-4 border-blue-500';
+                statCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">${dept}</p>
+                            <p class="text-2xl font-bold text-blue-600">${totalCount}</p>
+                            <p class="text-xs text-blue-500">${activeCount} activas</p>
+                        </div>
+                        <i class="fas fa-map-marker-alt text-blue-400 text-2xl"></i>
+                    </div>
+                `;
+                statCard.onclick = () => {
+                    document.querySelector(`input[name="departamento"][value="${dept}"]`).checked = true;
+                    onDepartamentoChange();
+                };
+                statsContainer.appendChild(statCard);
+                
+                // Tarjeta de departamento
+                const deptCard = document.createElement('div');
+                deptCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+                deptCard.innerHTML = `
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold">${dept}</h3>
+                            <div class="flex items-center gap-3">
+                                <span class="bg-white text-blue-600 px-3 py-1 rounded-full font-semibold">
+                                    ${totalCount} cámaras
+                                </span>
+                                <span class="bg-green-500 px-2 py-1 rounded-full text-xs font-bold">
+                                    ${activeCount} activas
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-blue-100">${Object.keys(info.municipios).length} municipios</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${Object.entries(info.municipios).map(([mun, munInfo]) => {
+                                const munCameras = filteredCameras.filter(c => c.ciudad === mun);
+                                const munActive = munCameras.filter(c => c.activa).length;
+                                if (munCameras.length === 0) return '';
+                                return `
+                                    <div class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition" onclick="selectMunicipio('${dept}', '${mun}')">
+                                        <div class="flex justify-between items-center">
+                                            <h4 class="font-semibold">${mun}</h4>
+                                            <span class="text-sm bg-gray-200 px-2 py-1 rounded">${munCameras.length}</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                                            <span>${munInfo.sitios} sitios</span>
+                                            <span class="${munActive === munCameras.length ? 'text-green-600' : 'text-yellow-600'}">
+                                                ${munActive} activas
+                                            </span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(deptCard);
+            });
+        }
+
+        // Vista por municipios
+        function renderVistaMunicipios(container, statsContainer) {
+            statsContainer.innerHTML = '';
+            container.innerHTML = '';
+            
+            const municipios = estructuraDatos.departamentos[currentSelection.departamento].municipios;
+            
+            Object.entries(municipios).forEach(([municipio, info]) => {
+                const munCameras = filteredCameras.filter(c => c.ciudad === municipio);
+                const activeCount = munCameras.filter(c => c.activa).length;
+                const totalCount = munCameras.length;
+                
+                if (totalCount === 0) return;
+                
+                // Estadísticas
+                const statCard = document.createElement('div');
+                statCard.className = 'bg-white rounded-lg shadow p-4 border-l-4 border-green-500';
+                statCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">${municipio}</p>
+                            <p class="text-2xl font-bold text-green-600">${totalCount}</p>
+                            <p class="text-xs text-green-500">${activeCount} activas</p>
+                        </div>
+                        <i class="fas fa-city text-green-400 text-2xl"></i>
+                    </div>
+                `;
+                statCard.onclick = () => selectMunicipio(currentSelection.departamento, municipio);
+                statsContainer.appendChild(statCard);
+                
+                // Agrupar por sitio
+                const sitios = {};
+                munCameras.forEach(camera => {
+                    if (!sitios[camera.sitio]) {
+                        sitios[camera.sitio] = [];
+                    }
+                    sitios[camera.sitio].push(camera);
+                });
+                
+                const municipioCard = document.createElement('div');
+                municipioCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+                municipioCard.innerHTML = `
+                    <div class="bg-gradient-to-r from-green-500 to-blue-500 p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold">${municipio}</h3>
+                            <div class="flex items-center gap-3">
+                                <span class="bg-white text-green-600 px-3 py-1 rounded-full font-semibold">
+                                    ${totalCount} cámaras
+                                </span>
+                                <span class="bg-green-500 px-2 py-1 rounded-full text-xs font-bold">
+                                    ${activeCount} activas
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-green-100">${Object.keys(sitios).length} sitios</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-4">
+                            ${Object.entries(sitios).map(([sitio, cameras]) => {
+                                const sitioActive = cameras.filter(c => c.activa).length;
+                                const cascada = cameras[0].cascada;
+                                const esPrincipal = cameras.some(c => c.esPrincipal);
+                                
+                                return `
+                                    <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition" onclick="openSiteModal('${sitio}')">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="font-semibold text-lg">${sitio}</h4>
+                                            <div class="flex items-center gap-2">
+                                                ${cascada ? `<span class="text-xs bg-purple-500 text-white px-2 py-1 rounded">${cascada}</span>` : ''}
+                                                ${esPrincipal ? `<i class="fas fa-crown text-yellow-400" title="Sitio Principal"></i>` : ''}
+                                                <span class="text-sm bg-blue-500 text-white px-2 py-1 rounded">${cameras.length} cámaras</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                                            <div class="text-center">
+                                                <div class="font-bold ${sitioActive === cameras.length ? 'text-green-600' : 'text-yellow-600'}">${sitioActive}</div>
+                                                <div class="text-gray-500">Activas</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-bold text-gray-700">${cameras.length}</div>
+                                                <div class="text-gray-500">Total</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-bold text-purple-600">${[...new Set(cameras.map(c => c.tipo_camara))].length}</div>
+                                                <div class="text-gray-500">Tipos</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="font-bold text-orange-600">${cascada ? 'Sí' : 'No'}</div>
+                                                <div class="text-gray-500">Cascada</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(municipioCard);
+            });
+        }
+
+        // Vista por sitios
+        function renderVistaSitios(container, statsContainer) {
+            statsContainer.innerHTML = '';
+            container.innerHTML = '';
+            
+            const sitios = {};
+            filteredCameras.forEach(camera => {
+                if (!sitios[camera.sitio]) {
+                    sitios[camera.sitio] = [];
+                }
+                sitios[camera.sitio].push(camera);
+            });
+            
+            Object.entries(sitios).forEach(([sitio, cameras]) => {
+                const activeCount = cameras.filter(c => c.activa).length;
+                const totalCount = cameras.length;
+                const cascada = cameras[0]?.cascada;
+                const esPrincipal = cameras.some(c => c.esPrincipal);
+                
+                // Estadísticas por sitio
+                const statCard = document.createElement('div');
+                statCard.className = 'bg-white rounded-lg shadow p-4 border-l-4 border-purple-500';
+                statCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">${sitio}</p>
+                            <p class="text-2xl font-bold text-purple-600">${totalCount}</p>
+                            <p class="text-xs text-purple-500">${activeCount} activas</p>
+                        </div>
+                        <i class="fas fa-video text-purple-400 text-2xl"></i>
+                    </div>
+                `;
+                statCard.onclick = () => openSiteModal(sitio);
+                statsContainer.appendChild(statCard);
+                
+                // Tarjeta de sitio con cámaras
+                const sitioCard = document.createElement('div');
+                sitioCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+                sitioCard.innerHTML = `
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold">${sitio}</h3>
+                            <div class="flex items-center gap-3">
+                                ${cascada ? `<span class="bg-white text-purple-600 px-2 py-1 rounded-full font-semibold">${cascada}</span>` : ''}
+                                ${esPrincipal ? `<span class="bg-yellow-500 px-2 py-1 rounded-full text-xs font-bold">Principal</span>` : ''}
+                                <span class="bg-white text-purple-600 px-3 py-1 rounded-full font-semibold">
+                                    ${totalCount} cámaras
+                                </span>
+                                <span class="${activeCount === totalCount ? 'bg-green-500' : activeCount > 0 ? 'bg-yellow-500' : 'bg-red-500'} px-2 py-1 rounded-full text-xs font-bold">
+                                    ${activeCount === totalCount ? 'Todas activas' : activeCount > 0 ? 'Parcial' : 'Inactivo'}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-purple-100">${currentSelection.municipio}, ${currentSelection.departamento}</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            ${cameras.map(camera => `
+                                <div class="camera-card border-2 rounded-lg p-3 transition-all duration-200 ${camera.activa ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="font-bold text-base block">${camera.code}</span>
+                                            <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded mt-1 inline-block">
+                                                ${camera.tipo_camara}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            ${camera.esPrincipal ? '<i class="fas fa-crown text-yellow-400 text-xs" title="Cámara Principal"></i>' : ''}
+                                            <span class="status-indicator ${camera.activa ? 'status-active pulse-animation' : 'status-inactive'}" title="${camera.activa ? 'Activa' : 'Inactiva'}"></span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1 text-sm">
+                                        <p><span class="font-semibold">IP:</span> ${camera.ip}</p>
+                                        <p><span class="font-semibold">Dirección:</span> ${camera.direccion}</p>
+                                        ${camera.cascada ? `<p><span class="font-semibold">Cascada:</span> ${camera.cascada}</p>` : ''}
+                                    </div>
+                                    ${editMode ? `
+                                        <div class="mt-3 flex justify-between items-center">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" class="selection-checkbox mr-2" onchange="toggleCameraSelection(${camera.id})" ${selectedCameras.has(camera.id) ? 'checked' : ''}>
+                                                <span class="text-xs text-gray-600">Seleccionar</span>
+                                            </div>
+                                            <button onclick="openEditCameraModal(${camera.id})" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                                                Editar
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(sitioCard);
+            });
+        }
+
+        // Vista individual de cámaras
+        function renderVistaCamaras(container, statsContainer) {
+            statsContainer.innerHTML = '';
+            
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    ${filteredCameras.map(camera => `
+                        <div class="camera-card border-2 rounded-lg p-3 transition-all duration-200 ${camera.activa ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="font-bold text-base block">${camera.code}</span>
+                                    <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded mt-1 inline-block">
+                                        ${camera.tipo_camara}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    ${camera.esPrincipal ? '<i class="fas fa-crown text-yellow-400 text-xs" title="Cámara Principal"></i>' : ''}
+                                    <span class="status-indicator ${camera.activa ? 'status-active pulse-animation' : 'status-inactive'}" title="${camera.activa ? 'Activa' : 'Inactiva'}"></span>
+                                </div>
+                            </div>
+                            <div class="space-y-1 text-sm">
+                                <p><span class="font-semibold">IP:</span> ${camera.ip}</p>
+                                <p><span class="font-semibold">Sitio:</span> ${camera.sitio}</p>
+                                <p><span class="font-semibold">Dirección:</span> ${camera.direccion}</p>
+                                ${camera.cascada ? `<p class="bg-blue-100 p-2 rounded"><span class="font-semibold">Cascada:</span> ${camera.cascada}</p>` : ''}
+                            </div>
+                            ${editMode ? `
+                                <div class="mt-3 flex justify-between items-center">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="selection-checkbox mr-2" onchange="toggleCameraSelection(${camera.id})" ${selectedCameras.has(camera.id) ? 'checked' : ''}>
+                                        <span class="text-xs text-gray-600">Seleccionar</span>
+                                    </div>
+                                    <button onclick="openEditCameraModal(${camera.id})" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                                        Editar
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Seleccionar municipio
+        function selectMunicipio(departamento, municipio) {
+            document.querySelector(`input[name="departamento"][value="${departamento}"]`).checked = true;
+            onDepartamentoChange();
+            setTimeout(() => {
+                document.querySelector(`input[name="municipio"][value="${municipio}"]`).checked = true;
+                onMunicipioChange();
+            }, 100);
+        }
+
+        // Seleccionar sitio
+        function selectSitio(sitio) {
+            document.querySelector(`input[name="sitio"][value="${sitio}"]`).checked = true;
+            onSitioChange();
+        }
+
+        // ============================================
+        // FUNCIONES DE MODALES ORIGINALES
+        // ============================================
+
+        // Abrir modal de sitio
+        function openSiteModal(sitio) {
+            currentSiteModal = sitio;
+            const modal = document.getElementById('site-modal');
+            modal.classList.remove('hidden');
+            loadSiteModalData(sitio);
+        }
+
+        // Cerrar modal de sitio
+        function closeSiteModal() {
+            const modal = document.getElementById('site-modal');
+            modal.classList.add('hidden');
+            currentSiteModal = null;
+        }
+
+        // Cargar datos en el modal de sitio
+        function loadSiteModalData(sitio) {
+            const cameras = camerasData.filter(c => c.sitio === sitio);
+            const activeCount = cameras.filter(c => c.activa).length;
+            const totalCount = cameras.length;
+            const cascada = cameras[0]?.cascada;
+            const esPrincipal = cameras.some(c => c.esPrincipal);
+            
+            // Actualizar título
+            document.getElementById('site-modal-title').textContent = `Sitio: ${sitio}`;
+            
+            // Información general
+            document.getElementById('site-general-info').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">${totalCount}</div>
+                        <div class="text-sm text-blue-700">Cámaras Totales</div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">${activeCount}</div>
+                        <div class="text-sm text-green-700">Cámaras Activas</div>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600">${Math.round((activeCount / totalCount) * 100)}%</div>
+                        <div class="text-sm text-purple-700">Tasa de Actividad</div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p><span class="font-semibold">Ubicación:</span> ${cameras[0]?.ciudad}, ${cameras[0]?.departamento}</p>
+                    <p><span class="font-semibold">Sitio:</span> ${sitio}</p>
+                    ${cascada ? `<p><span class="font-semibold">Cascada/Anillo:</span> ${cascada} ${esPrincipal ? '(Sitio Principal)' : ''}</p>` : ''}
+                </div>
+            `;
+            
+            // Información de cascada
+            loadSiteCascadeInfo(sitio, cascada, cameras);
+            
+            // Ayuda técnica
+            loadSiteTechHelp(cameras);
+            
+            // Lista de cámaras
+            loadSiteCamerasList(cameras);
+        }
+
+        // Cargar información de cascada en el modal
+        function loadSiteCascadeInfo(sitio, cascada, cameras) {
+            const container = document.getElementById('site-cascade-info');
+            
+            if (cascada && cascadasData[cascada]) {
+                const infoCascada = cascadasData[cascada];
+                const sitiosCascada = infoCascada.sitios;
+                const sitioPrincipal = infoCascada.principal;
+                
+                container.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-3">Cascada Configurada: ${cascada}</h4>
+                        <div class="cascade-connection">
+                            ${sitiosCascada.map((s, index) => `
+                                <div class="cascade-node ${s === sitioPrincipal ? 'principal' : ''} ${s === sitio ? 'border-2 border-green-500' : ''}">
+                                    <i class="fas fa-arrow-right connection-arrow"></i>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-semibold">${s}</span>
+                                        ${s === sitioPrincipal ? '<i class="fas fa-crown text-yellow-500" title="Sitio Principal"></i>' : ''}
+                                        ${s === sitio ? '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded">Actual</span>' : ''}
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        ${camerasData.filter(c => c.sitio === s).length} cámaras
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="text-sm text-green-700 mt-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Esta cascada tiene ${sitiosCascada.length} sitios conectados en el orden mostrado.
+                        </p>
+                    </div>
+                `;
+            } else if (cascada) {
+                container.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-yellow-800 mb-2">Cascada: ${cascada}</h4>
+                        <p class="text-yellow-700">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Aún no se ha especificado el sitio principal de cascada ni el orden de los sitios.
+                        </p>
+                        <p class="text-sm text-yellow-600 mt-2">
+                            Es necesario configurar el orden de la cascada para visualizar las rutas de conexión.
+                        </p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Sin Cascada Asignada</h4>
+                        <p class="text-gray-700">
+                            Este sitio no pertenece a ninguna cascada o anillo configurado.
+                        </p>
+                        <p class="text-sm text-gray-600 mt-2">
+                            Puedes asignarlo a una cascada existente o crear una nueva.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar ayuda técnica en el modal
+        function loadSiteTechHelp(cameras) {
+            const container = document.getElementById('site-tech-help');
+            
+            if (cameras.length === 0) {
+                container.innerHTML = '<p class="text-gray-600">No hay cámaras en este sitio.</p>';
+                return;
+            }
+            
+            // Calcular información de red
+            const ips = cameras.map(c => c.ip).sort();
+            const baseIP = cameras[0].ip.split('.').slice(0, 3).join('.');
+            const lastOctets = cameras.map(c => parseInt(c.ip.split('.')[3])).sort((a, b) => a - b);
+            const gateway = `${baseIP}.${lastOctets[0] - 1}`;
+            const computer = `${baseIP}.${lastOctets[lastOctets.length - 1] + 1}`;
+            const switchIP = cameras[0].switch;
+            
+            container.innerHTML = `
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-orange-800 mb-3">Configuración de Red - Información para Técnicos</h4>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <h5 class="font-semibold text-orange-700 mb-2">Direcciones IP del Sitio:</h5>
+                            <div class="bg-white rounded border p-3">
+                                <table class="w-full text-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-semibold text-gray-700 py-1">Cámaras:</td>
+                                            <td class="text-gray-600 py-1">${ips.join(', ')}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-semibold text-gray-700 py-1">Gateway Cámaras:</td>
+                                            <td class="text-gray-600 py-1">${gateway}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-semibold text-gray-700 py-1">Switch:</td>
+                                            <td class="text-gray-600 py-1">${switchIP}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-semibold text-gray-700 py-1">Computadora Técnica:</td>
+                                            <td class="text-gray-600 py-1">${computer}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h5 class="font-semibold text-orange-700 mb-2">Procedimiento de Conexión:</h5>
+                            <div class="bg-white rounded border p-3 space-y-2 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">1</span>
+                                    <span>Configure la computadora técnica con IP: <code class="bg-gray-100 px-1 rounded">${computer}</code></span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">2</span>
+                                    <span>Conecte al switch en <code class="bg-gray-100 px-1 rounded">${switchIP}</code></span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">3</span>
+                                    <span>Acceda a las cámaras mediante el gateway: <code class="bg-gray-100 px-1 rounded">${gateway}</code></span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">4</span>
+                                    <span>Las cámaras estarán en el rango: <code class="bg-gray-100 px-1 rounded">${ips[0]} - ${ips[ips.length - 1]}</code></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                            <h6 class="font-semibold text-blue-800 mb-1">Nota Importante:</h6>
+                            <p class="text-sm text-blue-700">
+                                Asegúrese de que la computadora esté en la misma subred que las cámaras. 
+                                El gateway debe ser accesible y todas las cámaras deben responder al ping.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Cargar lista de cámaras en el modal
+        function loadSiteCamerasList(cameras) {
+            const container = document.getElementById('site-cameras-list');
+            
+            container.innerHTML = cameras.map(camera => `
+                <div class="camera-card border-2 rounded-lg p-3 transition-all duration-200 ${camera.activa ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="font-bold text-base block">${camera.code}</span>
+                            <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded mt-1 inline-block">
+                                ${camera.tipo_camara}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            ${camera.esPrincipal ? '<i class="fas fa-crown text-yellow-400 text-xs" title="Cámara Principal"></i>' : ''}
+                            <span class="status-indicator ${camera.activa ? 'status-active pulse-animation' : 'status-inactive'}" title="${camera.activa ? 'Activa' : 'Inactiva'}"></span>
+                        </div>
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        <p><span class="font-semibold">IP:</span> ${camera.ip}</p>
+                        <p><span class="font-semibold">Dirección:</span> ${camera.direccion}</p>
+                        <p><span class="font-semibold">Gateway:</span> ${camera.gateway}</p>
+                        ${camera.cascada ? `<p><span class="font-semibold">Cascada:</span> ${camera.cascada}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Configurar cascada
+        function configureCascade() {
+            const sitio = currentSiteModal;
+            const modal = document.getElementById('cascade-config-modal');
+            modal.classList.remove('hidden');
+            loadCascadeConfigModal(sitio);
+        }
+
+        // Cargar modal de configuración de cascada
+        function loadCascadeConfigModal(sitio) {
+            const cameras = camerasData.filter(c => c.sitio === sitio);
+            const cascadaActual = cameras[0]?.cascada;
+            
+            if (cascadaActual && cascadasData[cascadaActual]) {
+                document.getElementById('cascade-name').value = cascadaActual;
+                // Cargar sitios existentes en la cascada
+                loadCascadeSitesOrder(cascadasData[cascadaActual].sitios, cascadasData[cascadaActual].principal);
+            } else {
+                document.getElementById('cascade-name').value = '';
+                // Cargar sitios sugeridos
+                const sitiosSugeridos = [sitio, ...getSitiosCercanos(sitio)];
+                loadCascadeSitesOrder(sitiosSugeridos, sitio);
+            }
+        }
+
+        // Obtener sitios cercanos para sugerir en cascada
+        function getSitiosCercanos(sitio) {
+            const municipio = camerasData.find(c => c.sitio === sitio)?.ciudad;
+            return [...new Set(camerasData
+                .filter(c => c.ciudad === municipio && c.sitio !== sitio)
+                .map(c => c.sitio)
+                .slice(0, 4))];
+        }
+
+        // Cargar orden de sitios en cascada
+        function loadCascadeSitesOrder(sitios, principal) {
+            const container = document.getElementById('cascade-sites-order');
+            container.innerHTML = sitios.map(sitio => `
+                <div class="flex items-center justify-between p-3 border rounded-lg bg-white mb-2 cursor-move" draggable="true">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-grip-vertical text-gray-400"></i>
+                        <span class="font-semibold">${sitio}</span>
+                        <span class="text-xs bg-gray-200 px-2 py-1 rounded">${camerasData.filter(c => c.sitio === sitio).length} cam</span>
+                    </div>
+                    <label class="flex items-center">
+                        <input type="radio" name="cascade-principal" value="${sitio}" ${sitio === principal ? 'checked' : ''} class="mr-2">
+                        <span class="text-sm">Principal</span>
+                    </label>
+                </div>
+            `).join('');
+        }
+
+        // Cerrar modal de configuración de cascada
+        function closeCascadeConfigModal() {
+            const modal = document.getElementById('cascade-config-modal');
+            modal.classList.add('hidden');
+        }
+
+        // Guardar configuración de cascada
+        function saveCascadeConfig() {
+            const nombre = document.getElementById('cascade-name').value;
+            const sitioPrincipal = document.querySelector('input[name="cascade-principal"]:checked')?.value;
+            
+            if (!nombre || !sitioPrincipal) {
+                showNotification('Debe ingresar un nombre y seleccionar un sitio principal', 'error');
+                return;
+            }
+            
+            // Obtener sitios ordenados
+            const sitiosOrdenados = Array.from(document.querySelectorAll('#cascade-sites-order > div'))
+                .map(div => div.querySelector('.font-semibold').textContent);
+            
+            // Actualizar cascadasData
+            cascadasData[nombre] = {
+                sitios: sitiosOrdenados,
+                principal: sitioPrincipal,
+                tipo: nombre.toLowerCase().includes('anillo') ? 'anillo' : 'principal'
+            };
+            
+            // Actualizar cámaras afectadas
+            camerasData.forEach(camera => {
+                if (sitiosOrdenados.includes(camera.sitio)) {
+                    camera.cascada = nombre;
+                    camera.esPrincipal = (camera.sitio === sitioPrincipal);
+                }
+            });
+            
+            unsavedChanges = true;
+            saveToStorage();
+            applyFilters();
+            closeCascadeConfigModal();
+            
+            // Recargar el modal del sitio si está abierto
+            if (currentSiteModal) {
+                loadSiteModalData(currentSiteModal);
+            }
+            
+            showNotification(`Cascada "${nombre}" configurada exitosamente`, 'success');
+        }
+
+        // ============================================
+        // FUNCIONES DE EDICIÓN
+        // ============================================
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const toggleBtn = document.getElementById('edit-mode-toggle');
+            
+            if (editMode) {
+                toggleBtn.classList.add('bg-yellow-500', 'text-white');
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Salir Modo Edición</span>';
+                showNotification('Modo edición activado', 'info');
+            } else {
+                toggleBtn.classList.remove('bg-yellow-500', 'text-white');
+                toggleBtn.innerHTML = '<i class="fas fa-edit"></i><span>Modo Edición</span>';
+                selectedCameras.clear();
+                updateSelectedCount();
+            }
+            
+            applyFilters();
+        }
+
+        function toggleCameraSelection(cameraId) {
+            if (selectedCameras.has(cameraId)) {
+                selectedCameras.delete(cameraId);
+            } else {
+                selectedCameras.add(cameraId);
+            }
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = selectedCameras.size;
+            document.getElementById('selected-count').textContent = count;
+            
+            const bulkEditBtn = document.getElementById('bulk-edit-btn');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            
+            if (count > 0) {
+                bulkEditBtn.classList.remove('hidden');
+                bulkDeleteBtn.classList.remove('hidden');
+            } else {
+                bulkEditBtn.classList.add('hidden');
+                bulkDeleteBtn.classList.add('hidden');
+            }
+        }
+
+        function openEditCameraModal(cameraId) {
+            const camera = camerasData.find(c => c.id === cameraId);
+            if (!camera) return;
+            
+            document.getElementById('edit-modal-title').textContent = `Editar Cámara: ${camera.code}`;
+            document.getElementById('edit-camera-id').value = camera.id;
+            document.getElementById('edit-camera-original').value = JSON.stringify(camera);
+            
+            // Llenar formulario
+            document.getElementById('edit-code').value = camera.code;
+            document.getElementById('edit-tipo').value = camera.tipo_camara;
+            document.getElementById('edit-departamento').value = camera.departamento;
+            updateMunicipiosEdit();
+            document.getElementById('edit-municipio').value = camera.ciudad;
+            document.getElementById('edit-sitio').value = camera.sitio;
+            document.getElementById('edit-ip').value = camera.ip;
+            document.getElementById('edit-gateway').value = camera.gateway;
+            document.getElementById('edit-switch').value = camera.switch;
+            document.getElementById('edit-computer').value = camera.computer || '';
+            document.getElementById('edit-direccion').value = camera.direccion;
+            document.getElementById('edit-lat').value = camera.coord_y;
+            document.getElementById('edit-lng').value = camera.coord_x;
+            document.getElementById('edit-cascada').value = camera.cascada || '';
+            document.getElementById('edit-esPrincipal').checked = camera.esPrincipal || false;
+            document.getElementById('edit-modelo').value = camera.modelo || '';
+            document.getElementById('edit-fecha-instalacion').value = camera.fecha_instalacion || '';
+            document.getElementById('edit-observaciones').value = camera.observaciones || '';
+            document.getElementById('edit-network-notes').value = camera.network_notes || '';
+            
+            // Estado
+            const status = camera.activa ? 'active' : (camera.en_mantenimiento ? 'maintenance' : 'inactive');
+            document.querySelector(`input[name="edit-status"][value="${status}"]`).checked = true;
+            
+            // Mostrar primera pestaña
+            switchEditTab('basic');
+            
+            document.getElementById('edit-camera-modal').classList.remove('hidden');
+        }
+
+        function closeEditCameraModal() {
+            document.getElementById('edit-camera-modal').classList.add('hidden');
+        }
+
+        function switchEditTab(tabName) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.edit-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar pestaña seleccionada
+            document.getElementById(`edit-${tabName}-tab`).classList.add('active');
+            
+            // Actualizar tabs activos
+            document.querySelectorAll('.edit-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-tab') === tabName) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+
+        function updateMunicipiosEdit() {
+            const dept = document.getElementById('edit-departamento').value;
+            const select = document.getElementById('edit-municipio');
+            
+            select.innerHTML = '<option value="">Seleccionar...</option>';
+            
+            if (dept && estructuraDatos.departamentos[dept]) {
+                Object.keys(estructuraDatos.departamentos[dept].municipios).forEach(municipio => {
+                    const option = document.createElement('option');
+                    option.value = municipio;
+                    option.textContent = municipio;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function saveCameraEdit() {
+            const cameraId = parseInt(document.getElementById('edit-camera-id').value);
+            const original = JSON.parse(document.getElementById('edit-camera-original').value);
+            const index = camerasData.findIndex(c => c.id === cameraId);
+            
+            if (index === -1) {
+                // Nueva cámara
+                const newId = camerasData.length > 0 ? Math.max(...camerasData.map(c => c.id)) + 1 : 1;
+                const status = document.querySelector('input[name="edit-status"]:checked').value;
+                
+                const newCamera = {
+                    id: newId,
+                    code: document.getElementById('edit-code').value,
+                    tipo_camara: document.getElementById('edit-tipo').value,
+                    departamento: document.getElementById('edit-departamento').value,
+                    ciudad: document.getElementById('edit-municipio').value,
+                    sitio: document.getElementById('edit-sitio').value,
+                    ip: document.getElementById('edit-ip').value,
+                    gateway: document.getElementById('edit-gateway').value,
+                    switch: document.getElementById('edit-switch').value,
+                    computer: document.getElementById('edit-computer').value || null,
+                    direccion: document.getElementById('edit-direccion').value,
+                    coord_x: document.getElementById('edit-lng').value || (-89 + Math.random() * 2).toFixed(6),
+                    coord_y: document.getElementById('edit-lat').value || (14 + Math.random() * 2).toFixed(6),
+                    nomenclatura: `${document.getElementById('edit-sitio').value}-${newId}`,
+                    activa: status === 'active',
+                    en_mantenimiento: status === 'maintenance',
+                    cascada: document.getElementById('edit-cascada').value || null,
+                    esPrincipal: document.getElementById('edit-esPrincipal').checked,
+                    modelo: document.getElementById('edit-modelo').value || null,
+                    fecha_instalacion: document.getElementById('edit-fecha-instalacion').value || null,
+                    observaciones: document.getElementById('edit-observaciones').value || null,
+                    network_notes: document.getElementById('edit-network-notes').value || null
+                };
+                
+                camerasData.push(newCamera);
+                unsavedChanges = true;
+                
+                addToHistory('CREATE_CAMERA', {
+                    cameraId: newId,
+                    code: newCamera.code
+                });
+            } else {
+                // Editar cámara existente
+                const status = document.querySelector('input[name="edit-status"]:checked').value;
+                
+                const updatedCamera = {
+                    ...original,
+                    code: document.getElementById('edit-code').value,
+                    tipo_camara: document.getElementById('edit-tipo').value,
+                    departamento: document.getElementById('edit-departamento').value,
+                    ciudad: document.getElementById('edit-municipio').value,
+                    sitio: document.getElementById('edit-sitio').value,
+                    ip: document.getElementById('edit-ip').value,
+                    gateway: document.getElementById('edit-gateway').value,
+                    switch: document.getElementById('edit-switch').value,
+                    computer: document.getElementById('edit-computer').value || null,
+                    direccion: document.getElementById('edit-direccion').value,
+                    coord_y: document.getElementById('edit-lat').value || original.coord_y,
+                    coord_x: document.getElementById('edit-lng').value || original.coord_x,
+                    cascada: document.getElementById('edit-cascada').value || null,
+                    esPrincipal: document.getElementById('edit-esPrincipal').checked,
+                    modelo: document.getElementById('edit-modelo').value || null,
+                    fecha_instalacion: document.getElementById('edit-fecha-instalacion').value || null,
+                    observaciones: document.getElementById('edit-observaciones').value || null,
+                    network_notes: document.getElementById('edit-network-notes').value || null,
+                    activa: status === 'active',
+                    en_mantenimiento: status === 'maintenance'
+                };
+                
+                camerasData[index] = updatedCamera;
+                unsavedChanges = true;
+                
+                addToHistory('EDIT_CAMERA', {
+                    cameraId: cameraId,
+                    code: original.code,
+                    changes: getObjectChanges(original, updatedCamera)
+                });
+            }
+            
+            saveToStorage();
+            applyFilters();
+            closeEditCameraModal();
+            
+            showNotification('Cambios guardados exitosamente', 'success');
+        }
+
+        function duplicateCamera() {
+            const originalId = parseInt(document.getElementById('edit-camera-id').value);
+            const original = camerasData.find(c => c.id === originalId);
+            
+            if (!original) return;
+            
+            const newId = camerasData.length > 0 ? Math.max(...camerasData.map(c => c.id)) + 1 : 1;
+            const duplicate = {
+                ...JSON.parse(JSON.stringify(original)),
+                id: newId,
+                code: `${original.code}-COPIA`,
+                ip: generateUniqueIP(),
+                gateway: original.gateway.replace(/\d+$/, parseInt(original.gateway.split('.')[3]) + 1)
+            };
+            
+            camerasData.push(duplicate);
+            unsavedChanges = true;
+            
+            addToHistory('DUPLICATE_CAMERA', {
+                originalId: originalId,
+                newId: newId,
+                code: original.code
+            });
+            
+            saveToStorage();
+            applyFilters();
+            closeEditCameraModal();
+            
+            showNotification('Cámara duplicada exitosamente', 'success');
+        }
+
+        function deleteCamera() {
+            const cameraId = parseInt(document.getElementById('edit-camera-id').value);
+            const camera = camerasData.find(c => c.id === cameraId);
+            
+            if (!camera) return;
+            
+            if (confirm(`¿Eliminar la cámara ${camera.code}? Esta acción no se puede deshacer.`)) {
+                camerasData = camerasData.filter(c => c.id !== cameraId);
+                selectedCameras.delete(cameraId);
+                unsavedChanges = true;
+                
+                addToHistory('DELETE_CAMERA', {
+                    cameraId: cameraId,
+                    code: camera.code
+                });
+                
+                saveToStorage();
+                applyFilters();
+                closeEditCameraModal();
+                updateSelectedCount();
+                
+                showNotification('Cámara eliminada exitosamente', 'success');
+            }
+        }
+
+        function showBulkEditModal() {
+            if (selectedCameras.size === 0) return;
+            
+            document.getElementById('bulk-edit-count').textContent = `Editando ${selectedCameras.size} cámaras`;
+            document.getElementById('bulk-edit-modal').classList.remove('hidden');
+            
+            // Configurar eventos para mostrar/ocultar campos
+            document.getElementById('bulk-edit-status').addEventListener('change', function() {
+                document.getElementById('bulk-status-value').classList.toggle('hidden', !this.checked);
+            });
+            
+            document.getElementById('bulk-edit-cascada').addEventListener('change', function() {
+                document.getElementById('bulk-cascada-value').classList.toggle('hidden', !this.checked);
+            });
+            
+            document.getElementById('bulk-edit-notas').addEventListener('change', function() {
+                document.getElementById('bulk-notas-value').classList.toggle('hidden', !this.checked);
+            });
+        }
+
+        function closeBulkEditModal() {
+            document.getElementById('bulk-edit-modal').classList.add('hidden');
+        }
+
+        function applyBulkEdit() {
+            const selectedIds = Array.from(selectedCameras);
+            const updates = {};
+            
+            if (document.getElementById('bulk-edit-status').checked) {
+                const status = document.getElementById('bulk-status-value').value;
+                updates.activa = status === 'active';
+                updates.en_mantenimiento = status === 'maintenance';
+            }
+            
+            if (document.getElementById('bulk-edit-cascada').checked) {
+                updates.cascada = document.getElementById('bulk-cascada-value').value;
+            }
+            
+            if (document.getElementById('bulk-edit-notas').checked) {
+                updates.nota = document.getElementById('bulk-notas-value').value;
+            }
+            
+            if (Object.keys(updates).length === 0) {
+                showNotification('No se seleccionaron campos para modificar', 'warning');
+                return;
+            }
+            
+            selectedIds.forEach(id => {
+                const index = camerasData.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    camerasData[index] = { ...camerasData[index], ...updates };
+                    if (updates.nota) {
+                        camerasData[index].observaciones = camerasData[index].observaciones 
+                            ? `${camerasData[index].observaciones}; ${updates.nota}`
+                            : updates.nota;
+                    }
+                }
+            });
+            
+            unsavedChanges = true;
+            saveToStorage();
+            applyFilters();
+            closeBulkEditModal();
+            selectedCameras.clear();
+            updateSelectedCount();
+            
+            showNotification(`${selectedIds.length} cámaras actualizadas`, 'success');
+        }
+
+        function deleteSelectedCameras() {
+            if (selectedCameras.size === 0) return;
+            
+            if (confirm(`¿Eliminar ${selectedCameras.size} cámaras seleccionadas? Esta acción no se puede deshacer.`)) {
+                camerasData = camerasData.filter(c => !selectedCameras.has(c.id));
+                selectedCameras.clear();
+                unsavedChanges = true;
+                
+                addToHistory('BULK_DELETE', {
+                    count: selectedCameras.size
+                });
+                
+                saveToStorage();
+                applyFilters();
+                updateSelectedCount();
+                
+                showNotification(`${selectedCameras.size} cámaras eliminadas`, 'success');
+            }
+        }
+
+        function addNewCamera() {
+            // Generar nuevo ID
+            const newId = camerasData.length > 0 ? Math.max(...camerasData.map(c => c.id)) + 1 : 1;
+            
+            document.getElementById('edit-modal-title').textContent = 'Nueva Cámara';
+            document.getElementById('edit-camera-id').value = newId;
+            document.getElementById('edit-camera-original').value = JSON.stringify({});
+            
+            // Resetear formulario
+            document.getElementById('edit-camera-form').reset();
+            document.getElementById('edit-departamento').value = 'Copán';
+            document.getElementById('edit-tipo').value = 'F1';
+            document.querySelector('input[name="edit-status"][value="active"]').checked = true;
+            
+            // Generar valores por defecto
+            document.getElementById('edit-code').value = `CAM-${newId.toString().padStart(4, '0')}`;
+            document.getElementById('edit-ip').value = generateUniqueIP();
+            document.getElementById('edit-gateway').value = '10.0.0.1';
+            document.getElementById('edit-switch').value = '10.0.0.254';
+            
+            updateMunicipiosEdit();
+            switchEditTab('basic');
+            
+            document.getElementById('edit-camera-modal').classList.remove('hidden');
+        }
+
+        function quickEdit() {
+            if (selectedCameras.size > 0) {
+                showBulkEditModal();
+            } else {
+                showNotification('Selecciona al menos una cámara para editar', 'warning');
+            }
+        }
+
+        function saveAllChanges() {
+            saveToStorage();
+            showNotification('Todos los cambios han sido guardados', 'success');
+        }
+
+        // ============================================
+        // FUNCIONES DE MAPA (ORIGINALES)
+        // ============================================
+
+        function initMiniMap() {
+            miniMap = L.map('mini-map').setView([14.6, -88.8], 8);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(miniMap);
+
+            updateMiniMap();
+        }
+
+        function updateMiniMap() {
+            if (!miniMap) return;
+
+            // Limpiar marcadores existentes
+            markers.forEach(marker => miniMap.removeLayer(marker));
+            markers = [];
+
+            // Agregar marcadores para cámaras filtradas
+            filteredCameras.forEach(camera => {
+                const marker = L.marker([parseFloat(camera.coord_y), parseFloat(camera.coord_x)])
+                    .bindPopup(`
+                        <div class="text-sm">
+                            <strong>${camera.code}</strong><br>
+                            ${camera.sitio}<br>
+                            ${camera.ciudad}<br>
+                            <span class="${camera.activa ? 'text-green-600' : 'text-red-600'}">
+                                ${camera.activa ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </div>
+                    `);
+                
+                markers.push(marker);
+                marker.addTo(miniMap);
+            });
+
+            // Ajustar vista si hay cámaras
+            if (filteredCameras.length > 0) {
+                const group = new L.featureGroup(markers);
+                miniMap.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function showMapModal() {
+            document.getElementById('map-modal').classList.remove('hidden');
+            setTimeout(initFullMap, 100);
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+            if (map) {
+                map.remove();
+                map = null;
+            }
+        }
+
+        function initFullMap() {
+            if (map) return;
+
+            map = L.map('map').setView([14.6, -88.8], 8);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Limpiar líneas de cascada anteriores
+            cascadeLines.forEach(line => map.removeLayer(line));
+            cascadeLines = [];
+
+            // Agregar marcadores con iconos personalizados
+            camerasData.forEach(camera => {
+                const iconColor = camera.activa ? 'green' : 'red';
+                const iconHtml = camera.esPrincipal ? 
+                    `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid gold; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">★</div>` :
+                    `<div style="background-color: ${iconColor}; width: 15px; height: 15px; border-radius: 50%;"></div>`;
+                
+                const customIcon = L.divIcon({
+                    html: iconHtml,
+                    className: 'custom-marker',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+
+                const marker = L.marker([parseFloat(camera.coord_y), parseFloat(camera.coord_x)], { icon: customIcon })
+                    .bindPopup(`
+                        <div class="text-sm min-w-[200px]">
+                            <div class="font-bold text-base mb-2">${camera.code} ${camera.esPrincipal ? '👑' : ''}</div>
+                            <p><strong>Sitio:</strong> ${camera.sitio}</p>
+                            <p><strong>Ubicación:</strong> ${camera.ciudad}, ${camera.departamento}</p>
+                            <p><strong>IP:</strong> ${camera.ip}</p>
+                            <p><strong>Estado:</strong> <span class="${camera.activa ? 'text-green-600 font-bold' : 'text-red-600'}">${camera.activa ? 'ACTIVA' : 'INACTIVA'}</span></p>
+                            ${camera.cascada ? `<p><strong>Cascada:</strong> ${camera.cascada}</p>` : ''}
+                            <p><strong>Dirección:</strong> ${camera.direccion}</p>
+                            <div class="mt-3 flex gap-2">
+                                <button onclick="openSiteModal('${camera.sitio}')" class="bg-orange-500 text-white px-3 py-1 rounded text-xs">Ver Sitio</button>
+                                <button onclick="openEditCameraModal(${camera.id})" class="bg-blue-500 text-white px-3 py-1 rounded text-xs">Editar</button>
+                            </div>
+                        </div>
+                    `)
+                    .addTo(map);
+            });
+
+            // Dibujar líneas de cascada
+            Object.entries(cascadasData).forEach(([nombre, info]) => {
+                if (info.sitios.length > 1) {
+                    const coordinates = [];
+                    info.sitios.forEach(sitio => {
+                        const camera = camerasData.find(c => c.sitio === sitio);
+                        if (camera) {
+                            coordinates.push([parseFloat(camera.coord_y), parseFloat(camera.coord_x)]);
+                        }
+                    });
+                    
+                    if (coordinates.length > 1) {
+                        const polyline = L.polyline(coordinates, {
+                            color: '#8B5CF6',
+                            weight: 4,
+                            opacity: 0.7,
+                            dashArray: '10, 10'
+                        }).addTo(map);
+                        
+                        cascadeLines.push(polyline);
+                    }
+                }
+            });
+
+            // Centrar en cámaras filtradas si hay selección
+            if (filteredCameras.length > 0 && filteredCameras.length < camerasData.length) {
+                const filteredMarkers = camerasData
+                    .filter(c => filteredCameras.some(fc => fc.code === c.code))
+                    .map(c => [parseFloat(c.coord_y), parseFloat(c.coord_x)]);
+                
+                if (filteredMarkers.length > 0) {
+                    map.fitBounds(filteredMarkers);
+                }
+            }
+        }
+
+        // ============================================
+        // FUNCIONES AUXILIARES
+        // ============================================
+
+        function generateUniqueIP() {
+            let ip;
+            let isUnique = false;
+            
+            while (!isUnique) {
+                const baseIP = `10.${41 + Math.floor(Math.random() * 30)}.${Math.floor(Math.random() * 10)}`;
+                const lastOctet = 170 + Math.floor(Math.random() * 30);
+                ip = `${baseIP}.${lastOctet}`;
+                
+                isUnique = !camerasData.some(c => c.ip === ip);
+            }
+            
+            return ip;
+        }
+
+        function updateStorageStatus() {
+            const camerasSize = JSON.stringify(camerasData).length;
+            const cascadasSize = JSON.stringify(cascadasData).length;
+            const totalSize = camerasSize + cascadasSize;
+            const max = 5 * 1024 * 1024; // 5MB
+            const percent = Math.round((totalSize / max) * 100);
+            
+            document.getElementById('storage-used').textContent = `${percent}%`;
+            
+            if (percent > 80) {
+                document.getElementById('storage-status').classList.add('text-red-500');
+            } else if (percent > 60) {
+                document.getElementById('storage-status').classList.add('text-yellow-500');
+            } else {
+                document.getElementById('storage-status').classList.remove('text-red-500', 'text-yellow-500');
+            }
+            
+            // Actualizar contadores
+            document.getElementById('total-cameras').textContent = camerasData.length;
+            document.getElementById('showing-count').textContent = filteredCameras.length;
+        }
+
+        function updateUnsavedIndicator() {
+            const indicator = document.getElementById('unsaved-changes-indicator');
+            const saveBtn = document.getElementById('save-all-btn');
+            
+            if (unsavedChanges) {
+                indicator.classList.remove('hidden');
+                saveBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Guardar Cambios Pendientes</span>';
+            } else {
+                indicator.classList.add('hidden');
+                saveBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i><span>Guardar Todo</span>';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Crear notificación
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 slide-in ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-${
+                        type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-circle' :
+                        type === 'warning' ? 'exclamation-triangle' : 'info-circle'
+                    }"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Eliminar después de 5 segundos
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'translate-y-[-20px]');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        function getObjectChanges(oldObj, newObj) {
+            const changes = {};
+            
+            for (const key in oldObj) {
+                if (oldObj[key] !== newObj[key]) {
+                    changes[key] = {
+                        old: oldObj[key],
+                        new: newObj[key]
+                    };
+                }
+            }
+            
+            return changes;
+        }
+
+        function getCurrentUser() {
+            return localStorage.getItem('current_user') || 'admin';
+        }
+
+        function updateCounts() {
+            const activeCount = filteredCameras.filter(c => c.activa).length;
+            document.getElementById('active-now').textContent = activeCount;
+            
+            // Actualizar contador de municipios activos
+            const municipiosActivos = [...new Set(filteredCameras.map(c => c.ciudad))].length;
+            document.getElementById('municipios-count').textContent = municipiosActivos;
+            
+            // Actualizar contador de cascadas
+            const cascadasActivas = [...new Set(filteredCameras.filter(c => c.cascada).map(c => c.cascada))].length;
+            document.getElementById('cascadas-count').textContent = cascadasActivas;
+        }
+
+        function updateStats() {
+            // Las estadísticas se actualizan en updateCounts y updateSelectionInfo
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            setStatusFilter('all');
+            document.querySelector('input[name="departamento"][value="all"]').checked = true;
+            document.querySelector('input[name="cascada"][value="all"]').checked = true;
+            document.querySelector('input[name="tipo"][value="all"]').checked = true;
+            
+            currentSelection.departamento = 'all';
+            currentSelection.municipio = 'all';
+            currentSelection.sitio = 'all';
+            
+            document.getElementById('mun-button').disabled = true;
+            document.getElementById('site-button').disabled = true;
+            document.getElementById('municipios-list').innerHTML = '';
+            document.getElementById('sitios-list').innerHTML = '';
+            
+            // Cerrar todos los acordeones
+            ['dept-accordion', 'mun-accordion', 'site-accordion', 'cascade-accordion', 'type-accordion'].forEach(id => {
+                const content = document.getElementById(id);
+                const chevron = document.getElementById(id.replace('accordion', 'chevron'));
+                if (content.classList.contains('open')) {
+                    content.classList.remove('open');
+                    chevron.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                }
+            });
+            
+            applyFilters();
+            
+            if (window.innerWidth < 1024) {
+                toggleFilters();
+            }
+        }
+
+        function toggleFilters() {
+            const filtersPanel = document.getElementById('filters-panel');
+            const filtersText = document.getElementById('filters-text');
+            
+            showFiltersMobile = !showFiltersMobile;
+            
+            if (showFiltersMobile) {
+                filtersPanel.classList.remove('hidden');
+                filtersText.textContent = 'Ocultar Filtros';
+            } else {
+                filtersPanel.classList.add('hidden');
+                filtersText.textContent = 'Filtros';
+            }
+        }
+
+        function toggleToolsMenu() {
+            const menu = document.getElementById('tools-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Actualizaciones en tiempo real
+        function startRealTimeUpdates() {
+            // Simular actualizaciones en tiempo real
+            setInterval(() => {
+                document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
+                
+                // Simular cambios aleatorios de estado (solo para demo)
+                if (Math.random() < 0.05) { // 5% de probabilidad cada actualización
+                    const randomCamera = camerasData[Math.floor(Math.random() * camerasData.length)];
+                    randomCamera.activa = !randomCamera.activa;
+                    applyFilters();
+                    updateCounts();
+                    updateMiniMap();
+                }
+            }, 10000); // Actualizar cada 10 segundos
+        }
+
+        // ============================================
+        // FUNCIONES DE IMPORT/EXPORT
+        // ============================================
+
+        function exportToCSV() {
+            const headers = ['ID', 'Código', 'Tipo', 'Departamento', 'Municipio', 'Sitio', 'IP', 'Gateway', 'Estado', 'Cascada'];
+            const rows = camerasData.map(c => [
+                c.id,
+                c.code,
+                c.tipo_camara,
+                c.departamento,
+                c.ciudad,
+                c.sitio,
+                c.ip,
+                c.gateway,
+                c.activa ? 'Activa' : 'Inactiva',
+                c.cascada || ''
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `camaras_911_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showNotification('Datos exportados a CSV', 'success');
+        }
+
+        function exportToJSON() {
+            const data = {
+                cameras: camerasData,
+                cascadas: cascadasData,
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    version: '1.0',
+                    totalCameras: camerasData.length
+                }
+            };
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `camaras_911_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('Datos exportados a JSON', 'success');
+        }
+
+        function importFromFile() {
+            document.getElementById('file-import').click();
+        }
+
+        function showBackupManager() {
+            loadBackupList();
+            document.getElementById('backup-modal').classList.remove('hidden');
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backup-modal').classList.add('hidden');
+        }
+
+        function showHistoryModal() {
+            loadHistory();
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        function loadBackupList() {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+            const container = document.getElementById('backup-list');
+            container.innerHTML = '';
+            
+            if (backups.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No hay respaldos</p>';
+                return;
+            }
+            
+            backups.reverse().forEach(backup => {
+                const backupItem = document.createElement('div');
+                backupItem.className = 'bg-gray-50 border rounded-lg p-3';
+                backupItem.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold">${backup.name}</h4>
+                            <p class="text-xs text-gray-600">${new Date(backup.timestamp).toLocaleString()}</p>
+                            ${backup.description ? `<p class="text-sm text-gray-700 mt-1">${backup.description}</p>` : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="restoreBackup('${backup.id}')" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                                Restaurar
+                            </button>
+                            <button onclick="downloadBackup('${backup.id}')" class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                                Descargar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(backupItem);
+            });
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No hay historial de cambios</p>';
+                return;
+            }
+            
+            history.slice(0, 50).forEach(entry => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'border-b pb-3';
+                historyItem.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold">${getActionText(entry.action)}</h4>
+                            <p class="text-sm text-gray-600">${entry.details ? JSON.stringify(entry.details) : ''}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500">${new Date(entry.timestamp).toLocaleString()}</p>
+                            <p class="text-xs text-gray-700">Por: ${entry.user}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(historyItem);
+            });
+        }
+
+        function getActionText(action) {
+            const actions = {
+                'CREATE_CAMERA': 'Cámara creada',
+                'EDIT_CAMERA': 'Cámara editada',
+                'DELETE_CAMERA': 'Cámara eliminada',
+                'DUPLICATE_CAMERA': 'Cámara duplicada',
+                'BULK_DELETE': 'Eliminación masiva'
+            };
+            return actions[action] || action;
+        }
+
+        function createBackup() {
+            const name = document.getElementById('backup-name').value || `Respaldo ${new Date().toLocaleString()}`;
+            const description = document.getElementById('backup-description').value;
+            
+            createManualBackup(name, description);
+            loadBackupList();
+            
+            document.getElementById('backup-name').value = '';
+            document.getElementById('backup-description').value = '';
+        }
+
+        function downloadBackup(backupId) {
+            const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+            const backup = backups.find(b => b.id === backupId);
+            
+            if (backup) {
+                const json = JSON.stringify(backup, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `respaldo_${backupId}.json`;
+                link.click();
+            }
+        }
+
+        function saveBackupSettings() {
+            const autoBackupEnabled = document.getElementById('auto-backup-enabled').checked;
+            const frequency = document.getElementById('backup-frequency').value;
+            const maxBackups = document.getElementById('max-backups').value;
+            
+            const settings = {
+                autoBackup: {
+                    enabled: autoBackupEnabled,
+                    frequency: frequency,
+                    maxBackups: parseInt(maxBackups)
+                }
+            };
+            
+            localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+            showNotification('Configuración guardada', 'success');
+        }
+
+        function resetToDefault() {
+            if (confirm('¿Restaurar datos por defecto? Se perderán todos los cambios.')) {
+                localStorage.removeItem(STORAGE_KEYS.CAMERAS);
+                localStorage.removeItem(STORAGE_KEYS.CASCADAS);
+                localStorage.removeItem(STORAGE_KEYS.HISTORY);
+                loadFromStorage();
+                applyFilters();
+                showNotification('Datos restaurados a valores por defecto', 'success');
+            }
+        }
+
+        function applySettings(settings) {
+            if (settings.autoBackup) {
+                document.getElementById('auto-backup-enabled').checked = settings.autoBackup.enabled;
+                document.getElementById('backup-frequency').value = settings.autoBackup.frequency;
+                document.getElementById('max-backups').value = settings.autoBackup.maxBackups;
+                
+                if (settings.autoBackup.enabled) {
+                    document.getElementById('auto-backup-settings').classList.remove('hidden');
+                }
+            }
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    document.getElementById('edit-lat').value = position.coords.latitude;
+                    document.getElementById('edit-lng').value = position.coords.longitude;
+                    showNotification('Ubicación obtenida', 'success');
+                }, error => {
+                    showNotification('No se pudo obtener la ubicación: ' + error.message, 'error');
+                });
+            } else {
+                showNotification('Geolocalización no soportada por este navegador', 'error');
+            }
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            init();
+            
+            // Configurar evento de importación
+            document.getElementById('file-import').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        
+                        if (data.cameras && Array.isArray(data.cameras)) {
+                            if (confirm('¿Importar datos? Los datos existentes serán reemplazados.')) {
+                                camerasData = data.cameras;
+                                if (data.cascadas) {
+                                    cascadasData = data.cascadas;
+                                }
+                                saveToStorage();
+                                applyFilters();
+                                showNotification('Datos importados exitosamente', 'success');
+                            }
+                        } else {
+                            throw new Error('Formato inválido');
+                        }
+                    } catch (error) {
+                        showNotification('Error al importar archivo: ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Reset input
+                e.target.value = '';
+            });
+            
+            // Configurar auto-backup settings toggle
+            document.getElementById('auto-backup-enabled').addEventListener('change', function() {
+                document.getElementById('auto-backup-settings').classList.toggle('hidden', !this.checked);
+            });
+            
+            // Iniciar autoguardado
+            setInterval(() => {
+                if (unsavedChanges) {
+                    saveToStorage();
+                }
+            }, 30000); // Cada 30 segundos
+        });
+
+    </script>
+</body>
+</html>
