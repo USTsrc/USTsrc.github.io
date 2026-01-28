@@ -277,6 +277,17 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -572,32 +583,46 @@
             
             <div id="chat-history" style="flex: 1; overflow-y: auto; margin-bottom: 1.5rem; min-height: 200px;">
                 <div class="message-ai fade-in">
-                    <div style="font-weight: 600; color: #667eea; margin-bottom: 0.25rem;">Asistente IA 911</div>
-                    <p style="margin: 0.5rem 0;">¡Hola! Soy tu asistente inteligente para el sistema de cámaras 911. Puedo ayudarte con:</p>
-                    <ul style="list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; font-size: 0.875rem;">
-                        <li>Estadísticas y análisis de cámaras</li>
-                        <li>Información por ubicación</li>
-                        <li>Configuraciones técnicas</li>
-                        <li>Reportes y tendencias</li>
-                    </ul>
-                    <p style="margin-top: 0.75rem;">¿En qué puedo ayudarte hoy?</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-robot" style="font-size: 0.75rem; color: white;"></i>
+                        </div>
+                        <div style="font-weight: 600; color: #667eea;">Asistente IA 911 - Sistema Inteligente</div>
+                    </div>
+                    <div style="margin: 0; white-space: pre-wrap; line-height: 1.5;">
+                        ¡Hola! Soy tu asistente inteligente especializado en el sistema de cámaras 911. Puedo ayudarte con:
+                        
+                        • <strong>Conteo específico:</strong> ¿Cuántas LPR en X ciudad/departamento?
+                        • <strong>Conexiones técnicas:</strong> Cómo conectarse a sitios, cámaras, switches
+                        • <strong>Configuración de red:</strong> IP, Gateway, Puerta de Enlace paso a paso
+                        • <strong>Aprendizaje continuo:</strong> Puedo aprender nueva información que me enseñes
+                        • <strong>Soporte técnico:</strong> Solución de problemas y procedimientos
+                        
+                        <strong>💡 Ejemplos:</strong>
+                        • "¿Cuántas LPR en Santa Rosa de Copán?"
+                        • "Cómo conectarse al sitio SRC-01 paso a paso"
+                        • "Configuración de gateway para cámara 10.41.25.100"
+                        • "Enseñar cómo acceder al switch del sitio OCO-02"
+                        
+                        ¿En qué puedo ayudarte hoy?
+                    </div>
                 </div>
             </div>
             
             <div style="margin-bottom: 1.5rem;">
                 <h4 style="font-size: 0.875rem; font-weight: 600; color: #6b7280; margin-bottom: 0.75rem;">Sugerencias rápidas</h4>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
-                    <button onclick="askAI('¿Cuántas cámaras activas hay?')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-chart-line" style="color: #3b82f6; margin-right: 0.5rem;"></i>Estadísticas
+                    <button onclick="askAI('¿Cuántas LPR en Santa Rosa de Copán?')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-car" style="color: #3b82f6; margin-right: 0.5rem;"></i>Contar LPR
                     </button>
-                    <button onclick="askAI('Mostrar cámaras inactivas')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.5rem;"></i>Alertas
+                    <button onclick="askAI('Cómo conectarse al sitio SRC-01 paso a paso')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-plug" style="color: #ef4444; margin-right: 0.5rem;"></i>Conexión Sitio
                     </button>
-                    <button onclick="askAI('Ubicaciones por departamento')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-map-marker-alt" style="color: #10b981; margin-right: 0.5rem;"></i>Ubicaciones
+                    <button onclick="askAI('Configuración de red gateway puerta de enlace')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-network-wired" style="color: #10b981; margin-right: 0.5rem;"></i>Config Red
                     </button>
-                    <button onclick="askAI('Ayuda técnica')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-tools" style="color: #8b5cf6; margin-right: 0.5rem;"></i>Ayuda
+                    <button onclick="askAI('Enseñar cómo acceder al switch 10.41.25.254')" style="padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; text-align: left; background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%); border: none; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-graduation-cap" style="color: #8b5cf6; margin-right: 0.5rem;"></i>Enseñar IA
                     </button>
                 </div>
             </div>
@@ -605,7 +630,7 @@
             <div style="margin-top: auto;">
                 <div style="position: relative;">
                     <input type="text" id="ai-input" placeholder="Escribe tu pregunta..." style="width: 100%; padding: 1rem 3rem 1rem 1rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
-                    <button id="send-ai-btn" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s;">
+                    <button id="send-ai-btn" onclick="sendAIQuestion()" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s;">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -748,7 +773,7 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DEL SISTEMA
+        // ==================== CONFIGURACIÓN DEL SISTEMA ====================
         const SYSTEMCONFIG = {
             apiKey: 'sk-408c3a26f959433caccb8b561b61314f',
             endpoint: 'https://api.deepseek.com/v1/chat/completions',
@@ -760,13 +785,14 @@
         };
 
         const STORAGEKEYS = {
-            CAMERAS: '911_cameras_v3',
-            SITES: '911_sites_v3',
-            SETTINGS: '911_settings_v3',
-            AIHISTORY: '911_ai_history_v3'
+            CAMERAS: '911_cameras_v4',
+            SITES: '911_sites_v4',
+            SETTINGS: '911_settings_v4',
+            AIHISTORY: '911_ai_history_v4',
+            KNOWLEDGE_BASE: '911_knowledge_base_v4'
         };
 
-        // VARIABLES GLOBALES
+        // ==================== VARIABLES GLOBALES ====================
         let camerasData = [];
         let sitesData = [];
         let filteredCameras = [];
@@ -778,7 +804,15 @@
         let currentSearchQuery = '';
         let listenersInitialized = false;
 
-        // ESTRUCTURA DE DATOS EDITABLE
+        // ==================== BASE DE CONOCIMIENTO DINÁMICA ====================
+        const knowledgeBase = {
+            conexionesSitios: {},
+            configuracionesEquipos: {},
+            procedimientos: {},
+            conocimientoAprendido: []
+        };
+
+        // ==================== ESTRUCTURA DE DATOS EDITABLE ====================
         let estructuraDatos = {
             departamentos: {
                 "Copán": {
@@ -816,9 +850,9 @@
             }
         };
 
-        // Cargar estructura desde localStorage si existe
+        // ==================== FUNCIONES DE INICIALIZACIÓN ====================
         function loadEstructuraDatos() {
-            const saved = localStorage.getItem('estructura_datos_v1');
+            const saved = localStorage.getItem('estructura_datos_v2');
             if (saved) {
                 try {
                     estructuraDatos = JSON.parse(saved);
@@ -829,12 +863,33 @@
         }
 
         function saveEstructuraDatos() {
-            localStorage.setItem('estructura_datos_v1', JSON.stringify(estructuraDatos));
+            localStorage.setItem('estructura_datos_v2', JSON.stringify(estructuraDatos));
         }
 
-        // INICIALIZACIÓN
+        function loadKnowledgeBase() {
+            const saved = localStorage.getItem(STORAGEKEYS.KNOWLEDGE_BASE);
+            if (saved) {
+                try {
+                    const loaded = JSON.parse(saved);
+                    Object.keys(loaded).forEach(key => {
+                        if (knowledgeBase[key] !== undefined) {
+                            knowledgeBase[key] = loaded[key];
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error cargando base de conocimiento:', e);
+                }
+            }
+        }
+
+        function saveKnowledgeBase() {
+            localStorage.setItem(STORAGEKEYS.KNOWLEDGE_BASE, JSON.stringify(knowledgeBase));
+        }
+
+        // ==================== INICIALIZACIÓN DEL SISTEMA ====================
         document.addEventListener('DOMContentLoaded', function() {
             loadEstructuraDatos();
+            loadKnowledgeBase();
             if (!listenersInitialized) {
                 initEventListeners();
                 listenersInitialized = true;
@@ -856,11 +911,15 @@
             }
             
             if (aiInput) {
-                aiInput.addEventListener('keypress', handleAIKeyPress);
+                aiInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        sendAIQuestion();
+                    }
+                });
             }
         }
 
-        // GESTIÓN DE DATOS
+        // ==================== GESTIÓN DE DATOS ====================
         function loadData() {
             const savedCameras = localStorage.getItem(STORAGEKEYS.CAMERAS);
             if (savedCameras) {
@@ -960,7 +1019,7 @@
             return datos;
         }
 
-        // ACTUALIZACIÓN DE INTERFAZ
+        // ==================== ACTUALIZACIÓN DE INTERFAZ ====================
         function updateUI() {
             updateStats();
             updateCounters();
@@ -1090,7 +1149,7 @@
             }
         }
 
-        // NUEVO SISTEMA DE FILTROS JERÁRQUICO
+        // ==================== SISTEMA DE FILTROS JERÁRQUICO ====================
         function filterByStatus(status) {
             currentFilter = status;
             applyAllFilters();
@@ -1209,7 +1268,7 @@
             updateCounters();
         }
 
-        // GESTIÓN DE CÁMARAS
+        // ==================== GESTIÓN DE CÁMARAS ====================
         function addNewCamera() {
             document.getElementById('modal-title').textContent = 'Nueva Cámara';
             document.getElementById('camera-id').value = '';
@@ -1218,7 +1277,6 @@
             const newId = camerasData.length ? Math.max(...camerasData.map(c => c.id)) + 1 : 1000;
             document.getElementById('camera-code').value = `CAM-${String(newId).padStart(4, '0')}`;
             
-            // Cargar municipios según el departamento seleccionado
             updateMunicipioSelect('camera-dept', 'camera-mun');
             
             document.getElementById('edit-modal').style.display = 'flex';
@@ -1238,7 +1296,6 @@
             document.getElementById('camera-status').value = camera.estado;
             document.getElementById('camera-notes').value = camera.observaciones || '';
             
-            // Cargar municipios según el departamento y seleccionar el correcto
             updateMunicipioSelect('camera-dept', 'camera-mun', camera.municipio);
             
             document.getElementById('edit-modal').style.display = 'flex';
@@ -1249,10 +1306,7 @@
             const munSelect = document.getElementById(munSelectId);
             const dept = deptSelect.value;
             
-            // Guardar valor actual
             const currentValue = munSelect.value;
-            
-            // Limpiar opciones
             munSelect.innerHTML = '';
             
             if (dept && estructuraDatos.departamentos[dept]) {
@@ -1266,7 +1320,6 @@
                     munSelect.appendChild(option);
                 });
                 
-                // Si no hay municipio seleccionado y hay valor actual, mantenerlo
                 if (!selectedMun && currentValue && municipios.includes(currentValue)) {
                     munSelect.value = currentValue;
                 }
@@ -1377,6 +1430,10 @@
                 statusClass = 'status-maintenance';
             }
             
+            const infoConexion = knowledgeBase.conexionesSitios[camera.sitio] || 
+                                knowledgeBase.conexionesSitios[camera.code] || 
+                                null;
+            
             container.innerHTML = `
                 <div style="padding: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -1387,6 +1444,7 @@
                             <i class="fas fa-times" style="font-size: 1.25rem;"></i>
                         </button>
                     </div>
+                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                         <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); border-radius: 1rem;">
                             <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
@@ -1404,17 +1462,20 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%); border-radius: 1rem;">
                             <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
                                 <i class="fas fa-network-wired" style="color: #10b981; margin-right: 0.5rem;"></i>Configuración de Red
                             </h4>
                             <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.875rem;">
                                 <div><strong>IP:</strong> ${camera.ip}</div>
-                                <div><strong>Gateway:</strong> ${camera.gateway || 'N/A'}</div>
-                                <div><strong>Switch:</strong> ${camera.switch || 'N/A'}</div>
+                                <div><strong>Gateway:</strong> ${camera.gateway || '10.0.0.1'}</div>
+                                <div><strong>Switch:</strong> ${camera.switch || '10.0.0.254'}</div>
+                                <div><strong>Máscara:</strong> 255.255.255.0</div>
                             </div>
                         </div>
-                        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border-radius: 1rem; grid-column: span 1;">
+                        
+                        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border-radius: 1rem;">
                             <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
                                 <i class="fas fa-map-marker-alt" style="color: #8b5cf6; margin-right: 0.5rem;"></i>Ubicación
                             </h4>
@@ -1423,6 +1484,7 @@
                                 Lat: ${camera.lat || 'N/A'}, Lng: ${camera.lng || 'N/A'}
                             </p>
                         </div>
+                        
                         ${camera.cascada ? `
                         <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%); border-radius: 1rem;">
                             <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
@@ -1431,18 +1493,83 @@
                             <p style="font-size: 1.25rem; font-weight: 700;">${camera.cascada}</p>
                         </div>
                         ` : ''}
-                        ${camera.observaciones ? `
-                        <div style="padding: 1.5rem; background: #f9fafb; border-radius: 1rem; grid-column: 1 / -1;">
-                            <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
-                                <i class="fas fa-sticky-note" style="color: #6b7280; margin-right: 0.5rem;"></i>Observaciones
-                            </h4>
-                            <p style="white-space: pre-wrap;">${camera.observaciones}</p>
-                        </div>
-                        ` : ''}
                     </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;">
+                        <h4 style="font-weight: 700; font-size: 1.25rem; margin-bottom: 1rem; color: #3b82f6;">
+                            <i class="fas fa-plug" style="margin-right: 0.5rem;"></i>Guía de Conexión
+                        </h4>
+                        
+                        ${infoConexion ? `
+                            <div style="margin-bottom: 1rem;">
+                                <h5 style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-check-circle"></i> Información de conexión disponible
+                                </h5>
+                                <p>Hay información guardada para este sitio. Pregunta al asistente: "¿Cómo conectarse a ${camera.sitio || camera.code}?"</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                            <div style="background: white; border-radius: 0.75rem; padding: 1rem; border: 1px solid #e5e7eb;">
+                                <h5 style="font-weight: 600; margin-bottom: 0.75rem; color: #374151;">
+                                    <i class="fas fa-bolt" style="color: #f59e0b; margin-right: 0.5rem;"></i>Acceso Rápido
+                                </h5>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <button onclick="copiarAlPortapapeles('http://${camera.ip}')" style="text-align: left; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; cursor: pointer;">
+                                        <i class="fas fa-globe" style="color: #3b82f6;"></i> Web: http://${camera.ip}
+                                    </button>
+                                    <button onclick="copiarAlPortapapeles('ssh tecnico@${camera.ip}')" style="text-align: left; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; cursor: pointer;">
+                                        <i class="fas fa-terminal" style="color: #10b981;"></i> SSH: tecnico@${camera.ip}
+                                    </button>
+                                    <button onclick="copiarAlPortapapeles('ping ${camera.ip}')" style="text-align: left; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; cursor: pointer;">
+                                        <i class="fas fa-satellite-dish" style="color: #8b5cf6;"></i> Ping: ${camera.ip}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; border-radius: 0.75rem; padding: 1rem; border: 1px solid #e5e7eb;">
+                                <h5 style="font-weight: 600; margin-bottom: 0.75rem; color: #374151;">
+                                    <i class="fas fa-key" style="color: #ef4444; margin-right: 0.5rem;"></i>Credenciales
+                                </h5>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+                                    <div><strong>Usuario:</strong> admin</div>
+                                    <div><strong>Contraseña:</strong> admin123</div>
+                                    <div><strong>Protocolo:</strong> ONVIF</div>
+                                    <div><strong>Puerto:</strong> 80</div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; border-radius: 0.75rem; padding: 1rem; border: 1px solid #e5e7eb;">
+                                <h5 style="font-weight: 600; margin-bottom: 0.75rem; color: #374151;">
+                                    <i class="fas fa-tools" style="color: #667eea; margin-right: 0.5rem;"></i>Acciones
+                                </h5>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <button onclick="askAI('¿Cómo conectarse a ${camera.sitio || camera.code}?')" style="padding: 0.5rem; border-radius: 0.5rem; background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: none; cursor: pointer;">
+                                        <i class="fas fa-robot"></i> Pedir guía de conexión
+                                    </button>
+                                    <button onclick="askAI('Aprende cómo conectarse a ${camera.sitio || camera.code}')" style="padding: 0.5rem; border-radius: 0.5rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border: none; cursor: pointer;">
+                                        <i class="fas fa-graduation-cap"></i> Enseñar conexión
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${camera.observaciones ? `
+                    <div style="padding: 1.5rem; background: #f9fafb; border-radius: 1rem; margin-bottom: 2rem;">
+                        <h4 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 1rem;">
+                            <i class="fas fa-sticky-note" style="color: #6b7280; margin-right: 0.5rem;"></i>Observaciones
+                        </h4>
+                        <p style="white-space: pre-wrap;">${camera.observaciones}</p>
+                    </div>
+                    ` : ''}
+                    
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button onclick="editCamera(${camera.id}); closeDetailsModal();" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <i class="fas fa-edit"></i>Editar Cámara
+                        </button>
+                        <button onclick="askAI('Configuración de red para ${camera.ip}')" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class="fas fa-network-wired"></i>Configuración de Red
                         </button>
                         <button onclick="deleteCamera(${camera.id})" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <i class="fas fa-trash"></i>Eliminar
@@ -1471,12 +1598,11 @@
             document.getElementById('edit-modal').style.display = 'none';
         }
 
-        // GESTIÓN DE SITIOS
+        // ==================== GESTIÓN DE SITIOS ====================
         function showSiteModal() {
             document.getElementById('site-modal').style.display = 'flex';
             document.getElementById('site-code').focus();
             
-            // Cargar municipios según el departamento seleccionado
             updateMunicipioSelect('site-dept', 'site-mun');
         }
 
@@ -1513,7 +1639,1273 @@
             showNotification('✅ Sitio creado exitosamente', 'success');
         }
 
-        // GESTIÓN DE DEPARTAMENTOS Y MUNICIPIOS
+        // ==================== SISTEMA DE ANÁLISIS DE LENGUAJE NATURAL ====================
+        class AnalizadorConsultas {
+            static analizar(consulta) {
+                const consultaLower = consulta.toLowerCase();
+                const palabras = consultaLower.split(' ');
+                
+                return {
+                    tipo: this.detectarTipoConsulta(consulta, consultaLower, palabras),
+                    parametros: this.extraerParametros(consulta, consultaLower),
+                    contexto: this.detectarContexto(consultaLower),
+                    urgencia: this.detectarUrgencia(consultaLower)
+                };
+            }
+
+            static detectarTipoConsulta(consulta, consultaLower, palabras) {
+                if (/(cuántas|cuantos|total de).*lpr/i.test(consulta)) return 'contar_lpr';
+                if (/(cuántas|cuantos|total de).*cámaras|camaras/i.test(consulta)) return 'contar_camaras';
+                if (/cámara.*(\d{1,3}\.){3}\d{1,3}/i.test(consulta)) return 'info_ip';
+                if (/conectarse|conectar|acceder|configurar.*(sitio|cámara|camara|switch)/i.test(consulta)) return 'conexion';
+                if (/(ip|gateway|puerta de enlace).*(cámara|camara|sitio)/i.test(consulta)) return 'config_red';
+                if (/paso a paso|instrucciones|procedimiento/i.test(consulta)) return 'procedimiento';
+                if (/agregar|añadir|enseñar|aprender/i.test(consulta)) return 'aprendizaje';
+                if (/problema|error|falla|no funciona/i.test(consulta)) return 'soporte';
+                if (/estadística|reporte|resumen/i.test(consulta)) return 'reporte';
+                
+                return 'general';
+            }
+
+            static extraerParametros(consulta, consultaLower) {
+                const parametros = {
+                    ciudad: null,
+                    departamento: null,
+                    sitio: null,
+                    tipoCamara: null,
+                    ip: null,
+                    codigo: null
+                };
+
+                const ipMatch = consulta.match(/(\d{1,3}\.){3}\d{1,3}/);
+                if (ipMatch) parametros.ip = ipMatch[0];
+
+                if (consultaLower.includes('lpr')) parametros.tipoCamara = 'LPR';
+                else if (consultaLower.includes('ptz')) parametros.tipoCamara = 'PTZ';
+                else if (consultaLower.includes('fija')) parametros.tipoCamara = 'FIJA';
+
+                const codigoMatch = consulta.match(/([A-Z]{3,4}-\d{3,4}|[A-Z]{3}-\d{2})/);
+                if (codigoMatch) parametros.codigo = codigoMatch[0];
+
+                Object.keys(estructuraDatos.departamentos).forEach(depto => {
+                    if (consultaLower.includes(depto.toLowerCase())) {
+                        parametros.departamento = depto;
+                        
+                        Object.keys(estructuraDatos.departamentos[depto].municipios).forEach(mun => {
+                            if (consultaLower.includes(mun.toLowerCase())) {
+                                parametros.ciudad = mun;
+                            }
+                        });
+                    }
+                });
+
+                return parametros;
+            }
+
+            static detectarContexto(consultaLower) {
+                if (consultaLower.includes('técnico') || consultaLower.includes('tecnico')) return 'tecnico';
+                if (consultaLower.includes('administrador') || consultaLower.includes('admin')) return 'administrador';
+                if (consultaLower.includes('operador') || consultaLower.includes('usuario')) return 'operador';
+                return 'general';
+            }
+
+            static detectarUrgencia(consultaLower) {
+                if (/(urgente|emergencia|crítico|critico|inmediato)/i.test(consultaLower)) return 'alta';
+                if (/(importante|prioridad|atención|atencion)/i.test(consultaLower)) return 'media';
+                return 'baja';
+            }
+        }
+
+        // ==================== SISTEMA DE RESPUESTAS INTELIGENTES ====================
+        class GeneradorRespuestasIA {
+            static generarRespuesta(consulta, analisis) {
+                switch(analisis.tipo) {
+                    case 'contar_lpr':
+                        return this.contarLPR(analisis.parametros);
+                    case 'contar_camaras':
+                        return this.contarCamaras(analisis.parametros);
+                    case 'info_ip':
+                        return this.infoPorIP(analisis.parametros);
+                    case 'conexion':
+                        return this.guiaConexion(analisis.parametros, consulta);
+                    case 'config_red':
+                        return this.configuracionRed(analisis.parametros);
+                    case 'procedimiento':
+                        return this.procedimientoDetallado(analisis.parametros, consulta);
+                    case 'aprendizaje':
+                        return this.aprenderNuevaInfo(consulta);
+                    case 'soporte':
+                        return this.soporteTecnico(consulta);
+                    case 'reporte':
+                        return this.generarReporte(analisis.parametros);
+                    default:
+                        return this.respuestaGeneral(consulta, analisis);
+                }
+            }
+
+            static contarLPR(parametros) {
+                const lprCameras = camerasData.filter(c => c.tipo === 'L1');
+                
+                if (parametros.departamento || parametros.ciudad || parametros.sitio) {
+                    let filtradas = lprCameras;
+                    
+                    if (parametros.departamento) {
+                        filtradas = filtradas.filter(c => c.departamento === parametros.departamento);
+                    }
+                    
+                    if (parametros.ciudad) {
+                        filtradas = filtradas.filter(c => c.municipio === parametros.ciudad);
+                    }
+                    
+                    if (parametros.sitio) {
+                        filtradas = filtradas.filter(c => c.sitio === parametros.sitio);
+                    }
+                    
+                    const activas = filtradas.filter(c => c.estado === 'active').length;
+                    const inactivas = filtradas.filter(c => c.estado === 'inactive').length;
+                    const mantenimiento = filtradas.filter(c => c.estado === 'maintenance').length;
+                    
+                    let respuesta = `📊 **Cámaras LPR encontradas:**\n\n`;
+                    respuesta += `📍 **Ubicación:** ${parametros.departamento || 'Todos'} > ${parametros.ciudad || 'Todas'} > ${parametros.sitio || 'Todos'}\n`;
+                    respuesta += `🔢 **Total:** ${filtradas.length} cámaras LPR\n`;
+                    respuesta += `✅ **Activas:** ${activas}\n`;
+                    respuesta += `⚠️ **Inactivas:** ${inactivas}\n`;
+                    respuesta += `🔧 **En mantenimiento:** ${mantenimiento}\n\n`;
+                    
+                    if (filtradas.length > 0) {
+                        respuesta += `**Lista de cámaras LPR:**\n`;
+                        filtradas.slice(0, 10).forEach(cam => {
+                            respuesta += `• ${cam.code} - ${cam.sitio || 'Sin sitio'} - ${cam.ip || 'Sin IP'} - ${cam.estado === 'active' ? '✅' : '❌'}\n`;
+                        });
+                        
+                        if (filtradas.length > 10) {
+                            respuesta += `\n*... y ${filtradas.length - 10} más*`;
+                        }
+                    }
+                    
+                    return respuesta;
+                }
+                
+                const totalLPR = lprCameras.length;
+                const activas = lprCameras.filter(c => c.estado === 'active').length;
+                
+                let respuesta = `🎯 **Sistema de Cámaras LPR (Reconocimiento de Placas)**\n\n`;
+                respuesta += `📈 **Total en sistema:** ${totalLPR} cámaras LPR\n`;
+                respuesta += `✅ **Activas:** ${activas} (${Math.round((activas/totalLPR)*100)}%)\n`;
+                respuesta += `⚠️ **Inactivas:** ${totalLPR - activas}\n\n`;
+                respuesta += `**Distribución por departamento:**\n`;
+                
+                const porDepto = {};
+                lprCameras.forEach(cam => {
+                    if (!porDepto[cam.departamento]) porDepto[cam.departamento] = 0;
+                    porDepto[cam.departamento]++;
+                });
+                
+                Object.entries(porDepto).forEach(([depto, count]) => {
+                    respuesta += `• ${depto}: ${count} LPRs\n`;
+                });
+                
+                respuesta += `\n💡 *Puedes preguntar por departamento específico: "¿Cuántas LPR en Copán?"*`;
+                
+                return respuesta;
+            }
+
+            static contarCamaras(parametros) {
+                let filtradas = camerasData;
+                
+                if (parametros.departamento) {
+                    filtradas = filtradas.filter(c => c.departamento === parametros.departamento);
+                }
+                
+                if (parametros.ciudad) {
+                    filtradas = filtradas.filter(c => c.municipio === parametros.ciudad);
+                }
+                
+                if (parametros.tipoCamara) {
+                    const tipoMap = {
+                        'LPR': 'L1',
+                        'PTZ': 'P1',
+                        'FIJA': ['F1', 'F2', 'F3']
+                    };
+                    
+                    if (parametros.tipoCamara === 'FIJA') {
+                        filtradas = filtradas.filter(c => ['F1', 'F2', 'F3'].includes(c.tipo));
+                    } else {
+                        filtradas = filtradas.filter(c => c.tipo === tipoMap[parametros.tipoCamara]);
+                    }
+                }
+                
+                const total = filtradas.length;
+                const activas = filtradas.filter(c => c.estado === 'active').length;
+                const inactivas = filtradas.filter(c => c.estado === 'inactive').length;
+                const mantenimiento = filtradas.filter(c => c.estado === 'maintenance').length;
+                
+                let respuesta = `📊 **Informe de Cámaras**\n\n`;
+                
+                if (parametros.departamento || parametros.ciudad || parametros.tipoCamara) {
+                    respuesta += `**Filtros aplicados:**\n`;
+                    if (parametros.departamento) respuesta += `• Departamento: ${parametros.departamento}\n`;
+                    if (parametros.ciudad) respuesta += `• Municipio: ${parametros.ciudad}\n`;
+                    if (parametros.tipoCamara) respuesta += `• Tipo: ${parametros.tipoCamara}\n`;
+                    respuesta += `\n`;
+                }
+                
+                respuesta += `🔢 **Total:** ${total} cámaras\n`;
+                respuesta += `✅ **Activas:** ${activas} (${total > 0 ? Math.round((activas/total)*100) : 0}%)\n`;
+                respuesta += `⚠️ **Inactivas:** ${inactivas}\n`;
+                respuesta += `🔧 **En mantenimiento:** ${mantenimiento}\n\n`;
+                
+                const porTipo = {};
+                filtradas.forEach(cam => {
+                    let tipo = cam.tipo;
+                    if (['F1', 'F2', 'F3'].includes(tipo)) tipo = 'Fija';
+                    else if (tipo === 'P1') tipo = 'PTZ';
+                    else if (tipo === 'L1') tipo = 'LPR';
+                    
+                    if (!porTipo[tipo]) porTipo[tipo] = 0;
+                    porTipo[tipo]++;
+                });
+                
+                respuesta += `**Distribución por tipo:**\n`;
+                Object.entries(porTipo).forEach(([tipo, count]) => {
+                    respuesta += `• ${tipo}: ${count}\n`;
+                });
+                
+                return respuesta;
+            }
+
+            static guiaConexion(parametros, consultaOriginal) {
+                const sitioKey = parametros.sitio || parametros.codigo || 'general';
+                
+                if (knowledgeBase.conexionesSitios[sitioKey]) {
+                    return this.mostrarGuiaExistente(sitioKey, parametros);
+                }
+                
+                return this.generarGuiaGenerica(parametros, consultaOriginal);
+            }
+
+            static mostrarGuiaExistente(sitioKey, parametros) {
+                const guia = knowledgeBase.conexionesSitios[sitioKey];
+                let respuesta = `🔌 **Guía de Conexión para ${sitioKey}**\n\n`;
+                
+                respuesta += `📋 **Información guardada el:** ${guia.fechaActualizacion || 'Desconocida'}\n`;
+                respuesta += `👤 **Actualizado por:** ${guia.autor || 'Sistema'}\n\n`;
+                
+                respuesta += `### 🔧 **CONEXIÓN AL SITIO**\n`;
+                respuesta += `${guia.conexionSitio || 'No hay información específica'}\n\n`;
+                
+                respuesta += `### 📹 **CONEXIÓN A CÁMARAS**\n`;
+                respuesta += `${guia.conexionCamaras || 'No hay información específica'}\n\n`;
+                
+                respuesta += `### 🌐 **CONFIGURACIÓN DE RED**\n`;
+                respuesta += `**IP Gateway:** ${guia.ipGateway || '10.0.0.1'}\n`;
+                respuesta += `**Puerta de Enlace:** ${guia.puertaEnlace || '10.0.0.254'}\n`;
+                respuesta += `**Máscara de Red:** ${guia.mascaraRed || '255.255.255.0'}\n\n`;
+                
+                if (guia.notas) {
+                    respuesta += `### 📝 **NOTAS IMPORTANTES**\n`;
+                    respuesta += `${guia.notas}\n\n`;
+                }
+                
+                respuesta += `💡 *¿Necesitas actualizar esta información? Pídeme que la actualice.*`;
+                
+                return respuesta;
+            }
+
+            static generarGuiaGenerica(parametros, consultaOriginal) {
+                let respuesta = `🔧 **Guía de Conexión Técnica**\n\n`;
+                
+                respuesta += `### 🎯 **PASO 1: ACCESO REMOTO AL SITIO**\n`;
+                respuesta += `1. **VPN Corporativa:** Conéctate a la VPN usando tus credenciales\n`;
+                respuesta += `2. **Acceso por TeamViewer/AnyDesk:** Usa el ID del equipo local\n`;
+                respuesta += `3. **Terminal SSH:** \`ssh tecnico@${parametros.ip || '10.0.0.X'}\`\n`;
+                respuesta += `   - Usuario: tecnico\n`;
+                respuesta += `   - Contraseña: **********\n\n`;
+                
+                respuesta += `### 📡 **PASO 2: CONFIGURACIÓN DE RED**\n`;
+                respuesta += `**Para cámaras nuevas:**\n`;
+                respuesta += `1. IP Estática: ${parametros.ip || '10.41.XXX.YYY'}\n`;
+                respuesta += `2. Gateway: ${parametros.ip ? parametros.ip.substring(0, parametros.ip.lastIndexOf('.')) + '.1' : '10.41.XXX.1'}\n`;
+                respuesta += `3. DNS: 8.8.8.8 / 8.8.4.4\n`;
+                respuesta += `4. Máscara: 255.255.255.0\n\n`;
+                
+                respuesta += `**Para switches:**\n`;
+                respuesta += `1. Acceso: \`telnet ${parametros.ip ? parametros.ip.substring(0, parametros.ip.lastIndexOf('.')) + '.254' : '10.41.XXX.254'}\`\n`;
+                respuesta += `2. Usuario: admin\n`;
+                respuesta += `3. Contraseña: admin123\n\n`;
+                
+                respuesta += `### 📹 **PASO 3: CONEXIÓN A CÁMARAS**\n`;
+                respuesta += `**Navegador Web:**\n`;
+                respuesta += `1. Abre Chrome/Firefox\n`;
+                respuesta += `2. Ingresa: \`http://${parametros.ip || 'CAMERA_IP'}\`\n`;
+                respuesta += `3. Usuario: admin\n`;
+                respuesta += `4. Contraseña: admin123\n\n`;
+                
+                respuesta += `**Software NVR:**\n`;
+                respuesta += `1. Abre el software de gestión\n`;
+                respuesta += `2. Agrega nueva cámara\n`;
+                respuesta += `3. Protocolo: ONVIF\n`;
+                respuesta += `4. Puerto: 80\n`;
+                respuesta += `5. Credenciales predeterminadas\n\n`;
+                
+                respuesta += `### 🛠️ **PASO 4: VERIFICACIÓN**\n`;
+                respuesta += `1. Ping a la cámara: \`ping ${parametros.ip || 'IP_CAMARA'}\`\n`;
+                respuesta += `2. Verifica flujo de video\n`;
+                respuesta += `3. Revisa almacenamiento\n`;
+                respuesta += `4. Configura grabación continua\n\n`;
+                
+                respuesta += `---\n`;
+                respuesta += `🤖 **¿Quieres que guarde esta guía para ${parametros.sitio || 'este sitio'}?**\n`;
+                respuesta += `*Puedo aprender los pasos específicos si me los enseñas.*\n`;
+                respuesta += `\`Ejemplo: "Aprende cómo conectarse al sitio SRC-01"\``;
+                
+                return respuesta;
+            }
+
+            static infoPorIP(parametros) {
+                if (!parametros.ip) {
+                    return `❌ **No se detectó una dirección IP en la consulta.**\n\nEjemplo: "Información de la cámara 10.41.25.100"`;
+                }
+                
+                const camara = camerasData.find(c => c.ip === parametros.ip);
+                
+                if (!camara) {
+                    const ipBase = parametros.ip.substring(0, parametros.ip.lastIndexOf('.'));
+                    const camarasMismoRango = camerasData.filter(c => c.ip && c.ip.startsWith(ipBase));
+                    
+                    let respuesta = `🔍 **No encontré una cámara con IP ${parametros.ip}**\n\n`;
+                    
+                    if (camarasMismoRango.length > 0) {
+                        respuesta += `**Cámaras en el mismo rango (${ipBase}.X):**\n`;
+                        camarasMismoRango.slice(0, 5).forEach(c => {
+                            respuesta += `• ${c.code} - ${c.ip} - ${c.sitio || 'Sin sitio'} - ${c.estado === 'active' ? '✅' : '❌'}\n`;
+                        });
+                    }
+                    
+                    respuesta += `\n💡 *¿Es una cámara nueva? Puedo ayudarte a agregarla al sistema.*`;
+                    
+                    return respuesta;
+                }
+                
+                let respuesta = `🎯 **Información de Cámara por IP**\n\n`;
+                respuesta += `**📍 IP:** ${camara.ip}\n`;
+                respuesta += `**🔢 Código:** ${camara.code}\n`;
+                respuesta += `**📌 Tipo:** ${this.obtenerTipoCompleto(camara.tipo)}\n`;
+                respuesta += `**🏢 Sitio:** ${camara.sitio || 'No asignado'}\n`;
+                respuesta += `**🌍 Ubicación:** ${camara.municipio}, ${camara.departamento}\n`;
+                respuesta += `**📡 Estado:** ${this.obtenerEstadoTexto(camara.estado)}\n\n`;
+                
+                respuesta += `**⚙️ Configuración de Red:**\n`;
+                respuesta += `• Gateway: ${camara.gateway || '10.0.0.1'}\n`;
+                respuesta += `• Switch: ${camara.switch || 'No especificado'}\n`;
+                respuesta += `• Última actualización: ${camara.ultimarevision || 'Desconocida'}\n\n`;
+                
+                if (camara.observaciones) {
+                    respuesta += `**📝 Observaciones:**\n${camara.observaciones}\n\n`;
+                }
+                
+                respuesta += `**🔗 Acceso rápido:**\n`;
+                respuesta += `• Navegador: http://${camara.ip}\n`;
+                respuesta += `• SSH: ssh tecnico@${camara.ip}\n`;
+                respuesta += `• Ping: ping ${camara.ip}\n\n`;
+                
+                respuesta += `💡 *¿Necesitas ayuda para conectarte a esta cámara?*`;
+                
+                return respuesta;
+            }
+
+            static configuracionRed(parametros) {
+                let respuesta = `🌐 **Guía Completa de Configuración de Red**\n\n`;
+                
+                respuesta += `### 🎯 **CONCEPTOS BÁSICOS**\n`;
+                respuesta += `**Dirección IP:** Identificador único en la red (ej: 10.41.25.100)\n`;
+                respuesta += `**Gateway/Puerta de Enlace:** Salida a otras redes (ej: 10.41.25.1)\n`;
+                respuesta += `**Máscara de Subred:** Define el tamaño de la red (ej: 255.255.255.0)\n`;
+                respuesta += `**DNS:** Servidor de nombres (ej: 8.8.8.8)\n\n`;
+                
+                respuesta += `### 🔧 **CONFIGURACIÓN POR EQUIPO**\n`;
+                respuesta += `**Para cámaras Hikvision/Dahua:**\n`;
+                respuesta += `1. Accede vía navegador a la IP actual\n`;
+                respuesta += `2. Configuración → Red → TCP/IP\n`;
+                respuesta += `3. Modo: Estático\n`;
+                respuesta += `4. IP: ${parametros.ip || '10.41.XX.YYY'}\n`;
+                respuesta += `5. Gateway: IP del router local\n`;
+                respuesta += `6. DNS: 8.8.8.8\n\n`;
+                
+                respuesta += `**Para switches Cisco/TP-Link:**\n`;
+                respuesta += `1. Conexión consola o SSH\n`;
+                respuesta += `2. Comando: \`configure terminal\`\n`;
+                respuesta += `3. \`interface vlan 1\`\n`;
+                respuesta += `4. \`ip address ${parametros.ip ? parametros.ip.substring(0, parametros.ip.lastIndexOf('.')) + '.254' : '10.41.XX.254'} 255.255.255.0\`\n`;
+                respuesta += `5. \`ip default-gateway ${parametros.ip ? parametros.ip.substring(0, parametros.ip.lastIndexOf('.')) + '.1' : '10.41.XX.1'}\`\n`;
+                respuesta += `6. \`exit\` y \`write memory\`\n\n`;
+                
+                respuesta += `### 🛠️ **COMANDOS DE VERIFICACIÓN**\n`;
+                respuesta += `**Windows:**\n`;
+                respuesta += `\`ipconfig\` - Ver configuración actual\n`;
+                respuesta += `\`ping IP\` - Probar conectividad\n`;
+                respuesta += `\`tracert IP\` - Rastrear ruta\n\n`;
+                
+                respuesta += `**Linux/SSH:**\n`;
+                respuesta += `\`ifconfig\` o \`ip addr\`\n`;
+                respuesta += `\`netstat -rn\` - Tabla de rutas\n`;
+                respuesta += `\`nslookup dominio\` - Verificar DNS\n\n`;
+                
+                respuesta += `### 🔍 **SOLUCIÓN DE PROBLEMAS**\n`;
+                respuesta += `1. **No hay ping:** Verificar cable, IP y gateway\n`;
+                respuesta += `2. **Sin acceso web:** Verificar puerto 80 y credenciales\n`;
+                respuesta += `3. **IP conflictos:** Cambiar a IP única en la red\n`;
+                respuesta += `4. **Sin internet:** Verificar gateway y DNS\n\n`;
+                
+                respuesta += `💡 *¿Necesitas configuración específica para algún equipo? Pregúntame.*`;
+                
+                return respuesta;
+            }
+
+            static procedimientoDetallado(parametros, consulta) {
+                const procedimientosRelevantes = [];
+                
+                Object.keys(knowledgeBase.procedimientos).forEach(key => {
+                    if (consulta.toLowerCase().includes(key.toLowerCase())) {
+                        procedimientosRelevantes.push(knowledgeBase.procedimientos[key]);
+                    }
+                });
+                
+                if (procedimientosRelevantes.length > 0) {
+                    let respuesta = `📋 **Procedimientos Encontrados**\n\n`;
+                    
+                    procedimientosRelevantes.forEach((proc, index) => {
+                        respuesta += `### ${index + 1}. ${proc.titulo}\n`;
+                        respuesta += `**Fecha:** ${proc.fecha}\n`;
+                        respuesta += `**Pasos:**\n`;
+                        
+                        proc.pasos.forEach((paso, i) => {
+                            respuesta += `${i + 1}. ${paso}\n`;
+                        });
+                        
+                        respuesta += `\n`;
+                    });
+                    
+                    return respuesta;
+                }
+                
+                return this.generarProcedimientoGenerico(consulta);
+            }
+
+            static generarProcedimientoGenerico(consulta) {
+                let respuesta = `📝 **Procedimiento Técnico**\n\n`;
+                
+                respuesta += `### 🎯 **ANÁLISIS DEL REQUERIMIENTO**\n`;
+                respuesta += `1. Identificar el equipo/sitio objetivo\n`;
+                respuesta += `2. Verificar disponibilidad de acceso\n`;
+                respuesta += `3. Revisar documentación existente\n`;
+                respuesta += `4. Preparar herramientas necesarias\n\n`;
+                
+                respuesta += `### 🔧 **PREPARACIÓN**\n`;
+                respuesta += `**Herramientas requeridas:**\n`;
+                respuesta += `• Laptop con software de gestión\n`;
+                respuesta += `• Cable de red/consola\n`;
+                respuesta += `• Credenciales de acceso\n`;
+                respuesta += `• Lista de IPs/documentación\n\n`;
+                
+                respuesta += `**Verificaciones previas:**\n`;
+                respuesta += `1. Ping al equipo objetivo\n`;
+                respuesta += `2. Acceso VPN activo\n`;
+                respuesta += `3. Credenciales actualizadas\n`;
+                respuesta += `4. Backup de configuración actual\n\n`;
+                
+                respuesta += `### 🚀 **EJECUCIÓN**\n`;
+                respuesta += `**Paso 1:** Conectar al equipo\n`;
+                respuesta += `**Paso 2:** Acceder a interfaz/configuración\n`;
+                respuesta += `**Paso 3:** Realizar cambios necesarios\n`;
+                respuesta += `**Paso 4:** Guardar configuración\n`;
+                respuesta += `**Paso 5:** Probar funcionamiento\n\n`;
+                
+                respuesta += `### ✅ **VERIFICACIÓN**\n`;
+                respuesta += `1. Test completo de funcionalidad\n`;
+                respuesta += `2. Documentar cambios realizados\n`;
+                respuesta += `3. Actualizar base de datos del sistema\n`;
+                respuesta += `4. Notificar a partes interesadas\n\n`;
+                
+                respuesta += `---\n`;
+                respuesta += `🤖 **¿Quieres que guarde este procedimiento?**\n`;
+                respuesta += `*Puedo crear un procedimiento personalizado si me das los pasos específicos.*\n`;
+                respuesta += `\`Ejemplo: "Crear procedimiento para reiniciar switch"\``;
+                
+                return respuesta;
+            }
+
+            static aprenderNuevaInfo(consulta) {
+                if (consulta.includes('conectarse') || consulta.includes('conexión')) {
+                    return this.solicitarInfoConexion(consulta);
+                } else if (consulta.includes('procedimiento') || consulta.includes('paso')) {
+                    return this.solicitarInfoProcedimiento(consulta);
+                } else if (consulta.includes('configuración') || consulta.includes('configurar')) {
+                    return this.solicitarInfoConfiguracion(consulta);
+                }
+                
+                return `🤔 **¿Qué te gustaría que aprenda?**\n\nPuedo aprender:\n• Cómo conectarse a un sitio/cámara\n• Procedimientos técnicos\n• Configuraciones específicas\n\nEjemplo: *"Aprende cómo conectarse al sitio SRC-01"*`;
+            }
+
+            static solicitarInfoConexion(consulta) {
+                const sitioMatch = consulta.match(/sitio\s+([A-Z]{3}-\d{2})|([A-Z]{3}-\d{2})/i);
+                const sitio = sitioMatch ? (sitioMatch[1] || sitioMatch[2]) : 'NUEVO_SITIO';
+                
+                setTimeout(() => {
+                    this.mostrarFormularioAprendizaje('conexion', sitio);
+                }, 100);
+                
+                return `📚 **Modo Aprendizaje: Conexión a ${sitio}**\n\nPor favor, completa la información en el formulario que aparecerá.\n\n*Puedes enseñarme:*\n• Pasos específicos de conexión\n• Credenciales especiales\n• Configuraciones de red\n• Notas importantes`;
+            }
+
+            static mostrarFormularioAprendizaje(tipo, referencia) {
+                const modal = document.createElement('div');
+                modal.id = 'learning-modal';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = 'display: flex; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.7);';
+                
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 1rem; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 1rem 1rem 0 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="font-size: 1.25rem; font-weight: 700;">🧠 Enseñar al Asistente IA</h3>
+                                <button onclick="document.getElementById('learning-modal').remove()" style="padding: 0.5rem; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; cursor: pointer; color: white;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 2rem;">
+                            <p style="margin-bottom: 1.5rem; color: #6b7280;">Completa la información para que pueda aprender sobre <strong>${referencia}</strong></p>
+                            
+                            <form id="learning-form">
+                                <input type="hidden" id="learning-type" value="${tipo}">
+                                <input type="hidden" id="learning-ref" value="${referencia}">
+                                
+                                <div style="margin-bottom: 1.5rem;">
+                                    <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Título/Descripción</label>
+                                    <input type="text" id="learning-title" required placeholder="Ej: Conexión al sitio SRC-01" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                                </div>
+                                
+                                <div style="margin-bottom: 1.5rem;">
+                                    <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Pasos detallados (uno por línea)</label>
+                                    <textarea id="learning-steps" rows="6" required placeholder="Paso 1: Conectar a VPN...
+        Paso 2: Acceder a 10.41.25.1...
+        Paso 3: Usuario: admin..." style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;"></textarea>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">IP Gateway</label>
+                                        <input type="text" id="learning-gateway" placeholder="10.41.25.1" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Puerta de Enlace</label>
+                                        <input type="text" id="learning-puerta" placeholder="10.41.25.254" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 1.5rem;">
+                                    <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Notas importantes</label>
+                                    <textarea id="learning-notes" rows="3" placeholder="Credenciales especiales, horarios de mantenimiento, etc." style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;"></textarea>
+                                </div>
+                                
+                                <div style="display: flex; gap: 1rem;">
+                                    <button type="button" onclick="guardarAprendizaje()" class="btn" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white;">
+                                        <i class="fas fa-save"></i> Guardar Conocimiento
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('learning-modal').remove()" class="btn" style="flex: 1; background: #e5e7eb; color: #374151;">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            }
+
+            static soporteTecnico(consulta) {
+                let respuesta = `🛠️ **Soporte Técnico - Diagnóstico**\n\n`;
+                
+                respuesta += `### 🔍 **DIAGNÓSTICO RÁPIDO**\n`;
+                
+                if (consulta.includes('no funciona') || consulta.includes('sin video')) {
+                    respuesta += `**Problema detectado: Cámara sin video**\n\n`;
+                    respuesta += `**Pasos a seguir:**\n`;
+                    respuesta += `1. 🔌 Verificar alimentación eléctrica\n`;
+                    respuesta += `2. 🌐 Comprobar conexión de red (ping)\n`;
+                    respuesta += `3. 📡 Revisar configuración IP\n`;
+                    respuesta += `4. 🔄 Reiniciar cámara\n`;
+                    respuesta += `5. ⚙️ Verificar configuración NVR\n`;
+                } else if (consulta.includes('lento') || consulta.includes('congelado')) {
+                    respuesta += `**Problema detectado: Video lento o congelado**\n\n`;
+                    respuesta += `**Causas posibles:**\n`;
+                    respuesta += `• 📈 Ancho de banda insuficiente\n`;
+                    respuesta += `• 💾 Almacenamiento lleno\n`;
+                    respuesta += `• 🔥 Sobrecalentamiento del equipo\n`;
+                    respuesta += `• 🐛 Error de software\n`;
+                } else {
+                    respuesta += `**Problema genérico reportado**\n\n`;
+                }
+                
+                respuesta += `\n### 🛠️ **HERRAMIENTAS DE DIAGNÓSTICO**\n`;
+                respuesta += `**Comandos útiles:**\n`;
+                respuesta += `• \`ping IP_CAMARA\` - Verificar conectividad\n`;
+                respuesta += `• \`tracert IP_CAMARA\` - Rastrear ruta de red\n`;
+                respuesta += `• \`arp -a\` - Ver tabla ARP\n`;
+                respuesta += `• \`netstat\` - Conexiones de red\n\n`;
+                
+                respuesta += `**Software recomendado:**\n`;
+                respuesta += `• Wireshark - Análisis de red\n`;
+                respuesta += `• Advanced IP Scanner\n`;
+                respuesta += `• Putty - Conexiones SSH\n`;
+                respuesta += `• VLC - Test de streams de video\n\n`;
+                
+                respuesta += `### 📞 **ESCALAMIENTO**\n`;
+                respuesta += `**Si el problema persiste:**\n`;
+                respuesta += `1. Documentar todos los pasos realizados\n`;
+                respuesta += `2. Capturar pantallas de errores\n`;
+                respuesta += `3. Contactar a soporte nivel 2\n`;
+                respuesta += `4. Referencia de ticket: TICKET-${Date.now().toString().slice(-6)}\n\n`;
+                
+                respuesta += `💡 *¿Necesitas ayuda más específica? Describe el problema con más detalle.*`;
+                
+                return respuesta;
+            }
+
+            static generarReporte(parametros) {
+                const ahora = new Date();
+                let respuesta = `📊 **Reporte del Sistema - ${ahora.toLocaleDateString('es-HN')}**\n\n`;
+                
+                const totalCamaras = camerasData.length;
+                const activas = camerasData.filter(c => c.estado === 'active').length;
+                const inactivas = camerasData.filter(c => c.estado === 'inactive').length;
+                const mantenimiento = camerasData.filter(c => c.estado === 'maintenance').length;
+                
+                respuesta += `### 📈 **ESTADÍSTICAS GLOBALES**\n`;
+                respuesta += `**Total de cámaras:** ${totalCamaras}\n`;
+                respuesta += `**Estado operativo:** ${Math.round((activas/totalCamaras)*100)}%\n`;
+                respuesta += `**Cámaras activas:** ${activas}\n`;
+                respuesta += `**Cámaras inactivas:** ${inactivas}\n`;
+                respuesta += `**En mantenimiento:** ${mantenimiento}\n\n`;
+                
+                respuesta += `### 🎯 **DISTRIBUCIÓN POR TIPO**\n`;
+                const tipos = {};
+                camerasData.forEach(cam => {
+                    const tipo = this.obtenerTipoCompleto(cam.tipo);
+                    if (!tipos[tipo]) tipos[tipo] = { total: 0, activas: 0 };
+                    tipos[tipo].total++;
+                    if (cam.estado === 'active') tipos[tipo].activas++;
+                });
+                
+                Object.entries(tipos).forEach(([tipo, datos]) => {
+                    const porcentaje = Math.round((datos.activas/datos.total)*100);
+                    respuesta += `**${tipo}:** ${datos.total} (${datos.activas} activas - ${porcentaje}%)\n`;
+                });
+                
+                respuesta += `\n`;
+                
+                respuesta += `### 🌍 **DISTRIBUCIÓN POR DEPARTAMENTO**\n`;
+                const porDepto = {};
+                camerasData.forEach(cam => {
+                    if (!porDepto[cam.departamento]) porDepto[cam.departamento] = { total: 0, activas: 0 };
+                    porDepto[cam.departamento].total++;
+                    if (cam.estado === 'active') porDepto[cam.departamento].activas++;
+                });
+                
+                Object.entries(porDepto).forEach(([depto, datos]) => {
+                    const porcentaje = Math.round((datos.activas/datos.total)*100);
+                    respuesta += `**${depto}:** ${datos.total} cámaras (${porcentaje}% operativas)\n`;
+                });
+                
+                respuesta += `\n`;
+                
+                const camarasCriticas = camerasData.filter(c => 
+                    c.estado === 'inactive' && 
+                    (!c.ultimarevision || (new Date() - new Date(c.ultimarevision)) > 30*24*60*60*1000)
+                );
+                
+                if (camarasCriticas.length > 0) {
+                    respuesta += `### ⚠️ **ALERTAS CRÍTICAS**\n`;
+                    respuesta += `**Cámaras inactivas por más de 30 días:**\n`;
+                    camarasCriticas.slice(0, 5).forEach(cam => {
+                        respuesta += `• ${cam.code} - ${cam.sitio || 'Sin sitio'} - ${cam.ip || 'Sin IP'}\n`;
+                    });
+                    
+                    if (camarasCriticas.length > 5) {
+                        respuesta += `*... y ${camarasCriticas.length - 5} más*\n`;
+                    }
+                    respuesta += `\n`;
+                }
+                
+                respuesta += `### 💡 **RECOMENDACIONES**\n`;
+                if (inactivas > 0) {
+                    respuesta += `• Revisar ${inactivas} cámaras inactivas\n`;
+                }
+                if (mantenimiento > 0) {
+                    respuesta += `• Completar mantenimiento pendiente de ${mantenimiento} cámaras\n`;
+                }
+                if (activas/totalCamaras < 0.9) {
+                    respuesta += `• Mejorar tasa de operatividad (actual: ${Math.round((activas/totalCamaras)*100)}%)\n`;
+                }
+                
+                respuesta += `\n`;
+                respuesta += `**Reporte generado:** ${ahora.toLocaleString('es-HN')}\n`;
+                respuesta += `**Sistema:** 911 Gestión de Cámaras v4.0\n`;
+                
+                return respuesta;
+            }
+
+            static respuestaGeneral(consulta, analisis) {
+                const conocimientoRelevante = knowledgeBase.conocimientoAprendido.find(item => 
+                    consulta.toLowerCase().includes(item.palabraClave.toLowerCase())
+                );
+                
+                if (conocimientoRelevante) {
+                    return `💡 **Información relacionada:**\n\n${conocimientoRelevante.informacion}\n\n*¿Te sirvió esta información?*`;
+                }
+                
+                let respuesta = `🤖 **Asistente IA 911 - Sistema Inteligente**\n\n`;
+                
+                respuesta += `He analizado tu consulta y detecté que necesitas información sobre el sistema.\n\n`;
+                
+                respuesta += `**Puedo ayudarte con:**\n`;
+                respuesta += `• 📊 Conteo de cámaras (LPR, PTZ, Fijas)\n`;
+                respuesta += `• 🔌 Guías de conexión paso a paso\n`;
+                respuesta += `• 🌐 Configuración de red (IP, Gateway, DNS)\n`;
+                respuesta += `• 🛠️ Soporte técnico y solución de problemas\n`;
+                respuesta += `• 📋 Procedimientos detallados\n`;
+                respuesta += `• 📈 Reportes y estadísticas\n`;
+                respuesta += `• 🧠 Aprender nueva información\n\n`;
+                
+                respuesta += `**Ejemplos de consultas:**\n`;
+                respuesta += `• "¿Cuántas LPR en Santa Rosa de Copán?"\n`;
+                respuesta += `• "Cómo conectarse al sitio SRC-01 paso a paso"\n`;
+                respuesta += `• "Configuración de red para cámara 10.41.25.100"\n`;
+                respuesta += `• "Procedimiento para reiniciar switch"\n`;
+                respuesta += `• "Enseñar cómo acceder al sitio OCO-02"\n\n`;
+                
+                respuesta += `💡 *Soy más útil cuando me das detalles específicos.*`;
+                
+                return respuesta;
+            }
+
+            static obtenerTipoCompleto(codigoTipo) {
+                const tipos = {
+                    'F1': 'Fija HD',
+                    'F2': 'Fija 4K',
+                    'F3': 'Fija 360°',
+                    'P1': 'PTZ Motorizada',
+                    'L1': 'LPR (Reconocimiento de Placas)'
+                };
+                return tipos[codigoTipo] || codigoTipo;
+            }
+
+            static obtenerEstadoTexto(estado) {
+                const estados = {
+                    'active': '✅ Activa',
+                    'inactive': '❌ Inactiva',
+                    'maintenance': '🔧 En Mantenimiento'
+                };
+                return estados[estado] || estado;
+            }
+        }
+
+        // ==================== FUNCIONES DEL ASISTENTE IA ====================
+        function askAI(question) {
+            const aiInput = document.getElementById('ai-input');
+            if (aiInput) {
+                aiInput.value = question;
+                sendAIQuestion();
+            }
+        }
+
+        function sendAIQuestion() {
+            const input = document.getElementById('ai-input');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            addMessageToChat(question, 'user');
+            input.value = '';
+            
+            showAILoading();
+            
+            setTimeout(() => {
+                const analisis = AnalizadorConsultas.analizar(question);
+                const response = GeneradorRespuestasIA.generarRespuesta(question, analisis);
+                addMessageToChat(response, 'ai');
+                hideAILoading();
+                
+                aiHistory.push({
+                    question,
+                    response,
+                    timestamp: new Date().toISOString()
+                });
+                
+                localStorage.setItem(STORAGEKEYS.AIHISTORY, JSON.stringify(aiHistory));
+            }, 1000);
+        }
+
+        function addMessageToChat(message, type) {
+            const chatHistory = document.getElementById('chat-history');
+            if (!chatHistory) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'user' ? 'message-user' : 'message-ai';
+            messageDiv.classList.add('fade-in');
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <div style="font-weight: 600;">Tú</div>
+                    </div>
+                    <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-robot" style="font-size: 0.75rem; color: white;"></i>
+                        </div>
+                        <div style="font-weight: 600; color: #667eea;">Asistente IA 911</div>
+                    </div>
+                    <div style="margin: 0; white-space: pre-wrap; line-height: 1.5;">${formatAIResponse(message)}</div>
+                `;
+            }
+            
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function formatAIResponse(response) {
+            if (typeof response !== 'string') return response;
+            
+            let formatted = response
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/### (.*?)\n/g, '<h4 style="margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 600; color: #374151;">$1</h4>')
+                .replace(/## (.*?)\n/g, '<h3 style="margin: 1.25rem 0 0.75rem; font-size: 1.125rem; font-weight: 700; color: #1f2937;">$1</h3>')
+                .replace(/\n/g, '<br>')
+                .replace(/\• /g, '• ')
+                .replace(/\`(.*?)\`/g, '<code style="background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>');
+            
+            return formatted;
+        }
+
+        function showAILoading() {
+            const sendBtn = document.getElementById('send-ai-btn');
+            if (sendBtn) {
+                sendBtn.innerHTML = '<div class="loading"></div>';
+                sendBtn.disabled = true;
+            }
+        }
+
+        function hideAILoading() {
+            const sendBtn = document.getElementById('send-ai-btn');
+            if (sendBtn) {
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                sendBtn.disabled = false;
+            }
+        }
+
+        function clearChat() {
+            const chatHistory = document.getElementById('chat-history');
+            if (!chatHistory) return;
+            
+            if (confirm('¿Estás seguro de limpiar el historial del chat?')) {
+                chatHistory.innerHTML = `
+                    <div class="message-ai fade-in">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-robot" style="font-size: 0.75rem; color: white;"></i>
+                            </div>
+                            <div style="font-weight: 600; color: #667eea;">Asistente IA 911 - Sistema Inteligente</div>
+                        </div>
+                        <div style="margin: 0; white-space: pre-wrap; line-height: 1.5;">
+                            ¡Hola! Soy tu asistente inteligente especializado en el sistema de cámaras 911. ¿En qué puedo ayudarte hoy?
+                        </div>
+                    </div>
+                `;
+                
+                aiHistory = [];
+                localStorage.setItem(STORAGEKEYS.AIHISTORY, JSON.stringify(aiHistory));
+            }
+        }
+
+        // ==================== FUNCIONES DE APRENDIZAJE ====================
+        function guardarAprendizaje() {
+            const tipo = document.getElementById('learning-type').value;
+            const referencia = document.getElementById('learning-ref').value;
+            const titulo = document.getElementById('learning-title').value;
+            const pasos = document.getElementById('learning-steps').value;
+            const gateway = document.getElementById('learning-gateway').value;
+            const puerta = document.getElementById('learning-puerta').value;
+            const notas = document.getElementById('learning-notes').value;
+            
+            if (!titulo || !pasos) {
+                showNotification('⚠️ Título y pasos son obligatorios', 'error');
+                return;
+            }
+            
+            if (tipo === 'conexion') {
+                if (!knowledgeBase.conexionesSitios[referencia]) {
+                    knowledgeBase.conexionesSitios[referencia] = {};
+                }
+                
+                knowledgeBase.conexionesSitios[referencia] = {
+                    titulo,
+                    pasos: pasos.split('\n').filter(p => p.trim()),
+                    ipGateway: gateway,
+                    puertaEnlace: puerta,
+                    notas,
+                    fechaActualizacion: new Date().toISOString().split('T')[0],
+                    autor: 'Usuario'
+                };
+                
+                knowledgeBase.conocimientoAprendido.push({
+                    palabraClave: referencia,
+                    informacion: `Conexión a ${referencia}: ${titulo}`,
+                    tipo: 'conexion',
+                    fecha: new Date().toISOString()
+                });
+            }
+            
+            saveKnowledgeBase();
+            
+            document.getElementById('learning-modal').remove();
+            
+            showNotification(`✅ Conocimiento guardado para ${referencia}`, 'success');
+            
+            const respuesta = `🧠 **¡He aprendido!**\n\nAhora conozco cómo conectarse a **${referencia}**.\n\nPuedes preguntarme: "¿Cómo conectarse a ${referencia}?" y te daré los pasos específicos.`;
+            addMessageToChat(respuesta, 'ai');
+        }
+
+        // ==================== FUNCIONES DEL MAPA ====================
+        function toggleMapConfig() {
+            const config = document.getElementById('map-config');
+            config.style.display = config.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function applyMapSettings() {
+            const url = document.getElementById('map-url').value;
+            const width = document.getElementById('map-width').value;
+            const height = document.getElementById('map-height').value;
+            const map = document.getElementById('main-map');
+            
+            map.src = url;
+            map.style.width = width + '%';
+            map.style.height = height + 'px';
+            
+            const settings = {
+                url,
+                width,
+                height
+            };
+            localStorage.setItem('mapSettings', JSON.stringify(settings));
+            
+            showNotification('✅ Configuración del mapa aplicada', 'success');
+            toggleMapConfig();
+        }
+
+        function resetMapSettings() {
+            document.getElementById('map-url').value = 'https://www.google.com/maps/d/embed?mid=156urWy3HLJdu7wGK8gHTFX4K1oXIasE&ehbc=2E312F&noprof=1';
+            document.getElementById('map-width').value = 100;
+            document.getElementById('map-height').value = 400;
+            
+            const map = document.getElementById('main-map');
+            map.src = document.getElementById('map-url').value;
+            map.style.width = '100%';
+            map.style.height = '400px';
+            
+            localStorage.removeItem('mapSettings');
+            showNotification('✅ Configuración del mapa restablecida', 'success');
+        }
+
+        function editMapSettings() {
+            toggleMapConfig();
+        }
+
+        function refreshMap() {
+            const map = document.getElementById('main-map');
+            const currentSrc = map.src;
+            map.src = '';
+            setTimeout(() => {
+                map.src = currentSrc;
+                updateMapTime();
+                showNotification('✅ Mapa actualizado', 'success');
+            }, 300);
+        }
+
+        function toggleMapFullscreen() {
+            const mapContainer = document.getElementById('map-container');
+            if (!document.fullscreenElement) {
+                if (mapContainer.requestFullscreen) {
+                    mapContainer.requestFullscreen();
+                } else if (mapContainer.mozRequestFullScreen) {
+                    mapContainer.mozRequestFullScreen();
+                } else if (mapContainer.webkitRequestFullscreen) {
+                    mapContainer.webkitRequestFullscreen();
+                } else if (mapContainer.msRequestFullscreen) {
+                    mapContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function loadMapSettings() {
+            const saved = localStorage.getItem('mapSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    document.getElementById('map-url').value = settings.url;
+                    document.getElementById('map-width').value = settings.width;
+                    document.getElementById('map-height').value = settings.height;
+                    
+                    const map = document.getElementById('main-map');
+                    map.src = settings.url;
+                    map.style.width = settings.width + '%';
+                    map.style.height = settings.height + 'px';
+                } catch (e) {
+                    console.error('Error loading map settings:', e);
+                }
+            }
+        }
+
+        function copyMapUrl() {
+            const url = document.getElementById('map-url').value;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showNotification('📋 URL del mapa copiada al portapapeles', 'success');
+                }).catch(err => {
+                    fallbackCopyMapUrl(url);
+                });
+            } else {
+                fallbackCopyMapUrl(url);
+            }
+        }
+
+        function fallbackCopyMapUrl(url) {
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showNotification('📋 URL del mapa copiada', 'success');
+            } catch (err) {
+                showNotification('❌ No se pudo copiar. Usa Ctrl+C manualmente', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // ==================== FUNCIONALIDADES GENERALES ====================
+        function toggleEditMode() {
+            editMode = !editMode;
+            const btn = document.getElementById('edit-mode-btn');
+            if (editMode) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Terminar';
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+                btn.style.color = 'white';
+            } else {
+                btn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                btn.style.background = '';
+                btn.style.color = '';
+            }
+            renderCameras();
+        }
+
+        function toggleNavPanel() {
+            const panel = document.getElementById('nav-panel');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+            } else {
+                panel.classList.add('active');
+                document.getElementById('assistant-panel').classList.remove('active');
+            }
+        }
+
+        function toggleAssistantPanel() {
+            const panel = document.getElementById('assistant-panel');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+            } else {
+                panel.classList.add('active');
+                document.getElementById('nav-panel').classList.remove('active');
+                updateTokenInfo();
+            }
+        }
+
+        function updateTokenInfo() {
+            const info = document.getElementById('token-info');
+            if (info) {
+                info.textContent = `Contexto: ${camerasData.length} cámaras`;
+            }
+        }
+
+        function exportData() {
+            try {
+                const exportData = {
+                    camaras: camerasData,
+                    sitios: sitesData,
+                    fecha: new Date().toISOString(),
+                    version: '4.0'
+                };
+                
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileName = `sistema911_export_${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileName);
+                linkElement.click();
+                
+                showNotification('📥 Datos exportados exitosamente', 'success');
+            } catch (error) {
+                console.error('Error exporting:', error);
+                showNotification('❌ Error al exportar datos', 'error');
+            }
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (data.camaras && Array.isArray(data.camaras)) {
+                            if (confirm(`¿Importar ${data.camaras.length} cámaras? Esto reemplazará los datos actuales.`)) {
+                                camerasData = data.camaras;
+                                if (data.sitios) sitesData = data.sitios;
+                                saveData();
+                                applyAllFilters();
+                                showNotification(`✅ ${data.camaras.length} cámaras importadas exitosamente`, 'success');
+                            }
+                        } else {
+                            showNotification('❌ Formato de archivo inválido', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error importing:', error);
+                        showNotification('❌ Error al importar el archivo', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // ==================== UTILIDADES ====================
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleDateString('es-HN', options);
+            }
+        }
+
+        function updateMapTime() {
+            const timeElement = document.getElementById('map-update-time');
+            if (timeElement) {
+                timeElement.textContent = `Última actualización ${new Date().toLocaleTimeString('es-HN')}`;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            
+            let bgGradient = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)';
+            let icon = 'info-circle';
+            
+            if (type === 'success') {
+                bgGradient = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                bgGradient = 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)';
+                icon = 'exclamation-circle';
+            }
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 0.75rem;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                color: white;
+                z-index: 9999;
+                background: ${bgGradient};
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-${icon}" style="font-size: 1.25rem;"></i>
+                    <span style="font-weight: 500;">${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        function copiarAlPortapapeles(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                showNotification(`📋 Copiado: ${texto}`, 'success');
+            });
+        }
+
+        // ==================== GESTIÓN DE DEPARTAMENTOS ====================
         function showDepartmentManager() {
             const modal = document.createElement('div');
             modal.id = 'dept-manager-modal';
@@ -1710,7 +3102,6 @@
             
             saveEstructuraDatos();
             
-            // Actualizar select de municipios si este departamento está seleccionado
             if (currentDeptFilter === deptName) {
                 loadMunFilterOptions(deptName);
             }
@@ -1754,7 +3145,6 @@
             saveEstructuraDatos();
             saveData();
             
-            // Actualizar select de municipios si este departamento está seleccionado
             if (currentDeptFilter === deptName) {
                 loadMunFilterOptions(deptName);
             }
@@ -1781,7 +3171,6 @@
             
             saveEstructuraDatos();
             
-            // Actualizar select de municipios si este departamento está seleccionado
             if (currentDeptFilter === deptName) {
                 loadMunFilterOptions(deptName);
             }
@@ -1791,7 +3180,6 @@
         }
 
         function updateDepartmentSelectors() {
-            // Actualizar selects en formularios
             const selectors = document.querySelectorAll('#camera-dept, #site-dept');
             selectors.forEach(select => {
                 const currentValue = select.value;
@@ -1808,491 +3196,29 @@
             });
         }
 
-        // FUNCIONES DEL MAPA
-        function toggleMapConfig() {
-            const config = document.getElementById('map-config');
-            config.style.display = config.style.display === 'block' ? 'none' : 'block';
+        // ==================== INICIALIZACIÓN DEL SISTEMA ====================
+        function initSystem() {
+            loadDeptFilterOptions();
+            loadMunFilterOptions('all');
+            updateDepartmentSelectors();
+            loadMapSettings();
+            updateTokenInfo();
+            
+            document.getElementById('camera-dept')?.addEventListener('change', function() {
+                updateMunicipioSelect('camera-dept', 'camera-mun');
+            });
+            
+            document.getElementById('site-dept')?.addEventListener('change', function() {
+                updateMunicipioSelect('site-dept', 'site-mun');
+            });
+            
+            console.log('%c🚀 Sistema 911 - Gestión Inteligente de Cámaras v4.0', 'color: #667eea; font-size: 20px; font-weight: bold;');
+            console.log('%c✅ Sistema IA inteligente inicializado correctamente', 'color: #10b981; font-size: 14px;');
+            console.log(`%c📊 Estadísticas: ${camerasData.length} cámaras cargadas`, 'color: #3b82f6; font-size: 12px;');
+            console.log(`%c📚 Base de conocimiento: ${Object.keys(knowledgeBase.conexionesSitios).length} sitios aprendidos`, 'color: #8b5cf6; font-size: 12px;');
         }
 
-        function applyMapSettings() {
-            const url = document.getElementById('map-url').value;
-            const width = document.getElementById('map-width').value;
-            const height = document.getElementById('map-height').value;
-            const map = document.getElementById('main-map');
-            
-            map.src = url;
-            map.style.width = width + '%';
-            map.style.height = height + 'px';
-            
-            const settings = {
-                url,
-                width,
-                height
-            };
-            localStorage.setItem('mapSettings', JSON.stringify(settings));
-            
-            showNotification('✅ Configuración del mapa aplicada', 'success');
-            toggleMapConfig();
-        }
-
-        function resetMapSettings() {
-            document.getElementById('map-url').value = 'https://www.google.com/maps/d/embed?mid=156urWy3HLJdu7wGK8gHTFX4K1oXIasE&ehbc=2E312F&noprof=1';
-            document.getElementById('map-width').value = 100;
-            document.getElementById('map-height').value = 400;
-            
-            const map = document.getElementById('main-map');
-            map.src = document.getElementById('map-url').value;
-            map.style.width = '100%';
-            map.style.height = '400px';
-            
-            localStorage.removeItem('mapSettings');
-            showNotification('✅ Configuración del mapa restablecida', 'success');
-        }
-
-        function editMapSettings() {
-            toggleMapConfig();
-        }
-
-        function refreshMap() {
-            const map = document.getElementById('main-map');
-            const currentSrc = map.src;
-            map.src = '';
-            setTimeout(() => {
-                map.src = currentSrc;
-                updateMapTime();
-                showNotification('✅ Mapa actualizado', 'success');
-            }, 300);
-        }
-
-        function toggleMapFullscreen() {
-            const mapContainer = document.getElementById('map-container');
-            if (!document.fullscreenElement) {
-                if (mapContainer.requestFullscreen) {
-                    mapContainer.requestFullscreen();
-                } else if (mapContainer.mozRequestFullScreen) {
-                    mapContainer.mozRequestFullScreen();
-                } else if (mapContainer.webkitRequestFullscreen) {
-                    mapContainer.webkitRequestFullscreen();
-                } else if (mapContainer.msRequestFullscreen) {
-                    mapContainer.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        }
-
-        function loadMapSettings() {
-            const saved = localStorage.getItem('mapSettings');
-            if (saved) {
-                try {
-                    const settings = JSON.parse(saved);
-                    document.getElementById('map-url').value = settings.url;
-                    document.getElementById('map-width').value = settings.width;
-                    document.getElementById('map-height').value = settings.height;
-                    
-                    const map = document.getElementById('main-map');
-                    map.src = settings.url;
-                    map.style.width = settings.width + '%';
-                    map.style.height = settings.height + 'px';
-                } catch (e) {
-                    console.error('Error loading map settings:', e);
-                }
-            }
-        }
-
-        function copyMapUrl() {
-            const url = document.getElementById('map-url').value;
-            
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(() => {
-                    showNotification('📋 URL del mapa copiada al portapapeles', 'success');
-                }).catch(err => {
-                    fallbackCopyMapUrl(url);
-                });
-            } else {
-                fallbackCopyMapUrl(url);
-            }
-        }
-
-        function fallbackCopyMapUrl(url) {
-            const textArea = document.createElement('textarea');
-            textArea.value = url;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showNotification('📋 URL del mapa copiada', 'success');
-            } catch (err) {
-                showNotification('❌ No se pudo copiar. Usa Ctrl+C manualmente', 'error');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-
-        // ASISTENTE IA
-        function askAI(question) {
-            const aiInput = document.getElementById('ai-input');
-            if (aiInput) {
-                aiInput.value = question;
-                sendAIQuestion();
-            }
-        }
-
-        function sendAIQuestion() {
-            const input = document.getElementById('ai-input');
-            const question = input.value.trim();
-            
-            if (!question) return;
-            
-            addMessageToChat(question, 'user');
-            input.value = '';
-            
-            showAILoading();
-            
-            setTimeout(() => {
-                const response = generateAIResponse(question);
-                addMessageToChat(response, 'ai');
-                hideAILoading();
-                
-                aiHistory.push({
-                    question,
-                    response,
-                    timestamp: new Date().toISOString()
-                });
-                
-                localStorage.setItem(STORAGEKEYS.AIHISTORY, JSON.stringify(aiHistory));
-            }, 1000);
-        }
-
-        function handleAIKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendAIQuestion();
-            }
-        }
-
-        function addMessageToChat(message, type) {
-            const chatHistory = document.getElementById('chat-history');
-            if (!chatHistory) return;
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = type === 'user' ? 'message-user' : 'message-ai';
-            messageDiv.classList.add('fade-in');
-            
-            if (type === 'user') {
-                messageDiv.innerHTML = `
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Tú</div>
-                    <p style="margin: 0;">${escapeHtml(message)}</p>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div style="font-weight: 600; color: #667eea; margin-bottom: 0.25rem;">Asistente IA 911</div>
-                    <div style="margin: 0.5rem 0;">${formatAIResponse(message)}</div>
-                `;
-            }
-            
-            chatHistory.appendChild(messageDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
-
-        function formatAIResponse(response) {
-            if (typeof response === 'string') {
-                return response.replace(/\n/g, '<br>');
-            }
-            return response;
-        }
-
-        function showAILoading() {
-            const sendBtn = document.getElementById('send-ai-btn');
-            if (sendBtn) {
-                sendBtn.innerHTML = '<div class="loading"></div>';
-                sendBtn.disabled = true;
-            }
-        }
-
-        function hideAILoading() {
-            const sendBtn = document.getElementById('send-ai-btn');
-            if (sendBtn) {
-                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                sendBtn.disabled = false;
-            }
-        }
-
-        function clearChat() {
-            const chatHistory = document.getElementById('chat-history');
-            if (!chatHistory) return;
-            
-            if (confirm('¿Estás seguro de limpiar el historial del chat?')) {
-                chatHistory.innerHTML = `
-                    <div class="message-ai fade-in">
-                        <div style="font-weight: 600; color: #667eea; margin-bottom: 0.25rem;">Asistente IA 911</div>
-                        <p style="margin: 0.5rem 0;">¡Hola! Soy tu asistente inteligente para el sistema de cámaras 911. ¿En qué puedo ayudarte hoy?</p>
-                    </div>
-                `;
-                
-                aiHistory = [];
-                localStorage.setItem(STORAGEKEYS.AIHISTORY, JSON.stringify(aiHistory));
-            }
-        }
-
-        function generateAIResponse(question) {
-            const questionLower = question.toLowerCase();
-            
-            if (questionLower.includes('cuántas') && questionLower.includes('cámaras')) {
-                const total = camerasData.length;
-                const active = camerasData.filter(c => c.estado === 'active').length;
-                const inactive = camerasData.filter(c => c.estado === 'inactive').length;
-                const maintenance = camerasData.filter(c => c.estado === 'maintenance').length;
-                
-                return `Actualmente el sistema cuenta con:\n\n📊 Total: ${total} cámaras\n✅ Activas: ${active} cámaras\n⚠️ Inactivas: ${inactive} cámaras\n🔧 En mantenimiento: ${maintenance} cámaras\n\n¿Necesitas información más específica?`;
-            }
-            
-            if (questionLower.includes('inactivas') || questionLower.includes('problema')) {
-                const inactiveCameras = camerasData.filter(c => c.estado === 'inactive');
-                
-                if (inactiveCameras.length === 0) {
-                    return "✅ ¡Excelente noticia! No hay cámaras inactivas en este momento.";
-                }
-                
-                let response = `⚠️ Se encontraron ${inactiveCameras.length} cámaras inactivas:\n\n`;
-                
-                inactiveCameras.slice(0, 5).forEach(cam => {
-                    response += `• ${cam.code} - ${cam.municipio}, ${cam.departamento} (IP: ${cam.ip})\n`;
-                });
-                
-                if (inactiveCameras.length > 5) {
-                    response += `\n... y ${inactiveCameras.length - 5} más.\n`;
-                }
-                
-                response += "\n¿Deseas ver el detalle completo de alguna cámara?";
-                return response;
-            }
-            
-            if (questionLower.includes('departamento') || questionLower.includes('ubicación')) {
-                let response = "📍 Cámaras por departamento:\n\n";
-                
-                Object.entries(estructuraDatos.departamentos).forEach(([dept, info]) => {
-                    const camerasInDept = camerasData.filter(c => c.departamento === dept).length;
-                    response += `• ${dept}: ${camerasInDept} cámaras (${info.totalCamaras} totales registradas)\n`;
-                });
-                
-                response += "\nPuedes usar el filtro de ubicación en el panel izquierdo para ver cámaras específicas.";
-                return response;
-            }
-            
-            if (questionLower.includes('cascada') || questionLower.includes('anillo')) {
-                const cascadas = Object.keys(estructuraDatos.cascadas);
-                
-                let response = "🔄 Cascadas configuradas en el sistema:\n\n";
-                
-                cascadas.forEach(cascada => {
-                    const info = estructuraDatos.cascadas[cascada];
-                    response += `• ${cascada}: ${info.sitios.length} sitios (Principal: ${info.principal})\n`;
-                });
-                
-                response += "\nCada cascada representa un grupo de sitios interconectados.";
-                return response;
-            }
-            
-            if (questionLower.includes('ayuda') || questionLower.includes('técnica')) {
-                return "🛠️ **Soporte Técnico**\n\nPuedo ayudarte con:\n\n1. **Diagnóstico de cámaras**: Ver estado y configuración\n2. **Configuración de red**: IP, gateway y switches\n3. **Mantenimiento**: Programar revisiones técnicas\n4. **Reportes**: Generar estadísticas y alertas\n\n¿Qué tipo de asistencia técnica necesitas?";
-            }
-            
-            return `🤖 He recibido tu pregunta: "${question}"\n\nPara darte una respuesta más precisa, puedes especificar si necesitas:\n\n• Información sobre cámaras específicas\n• Estadísticas del sistema\n• Configuración técnica\n• Reportes de mantenimiento\n\n¡Estoy aquí para ayudarte!`;
-        }
-
-        // FUNCIONALIDADES GENERALES
-        function toggleEditMode() {
-            editMode = !editMode;
-            const btn = document.getElementById('edit-mode-btn');
-            if (editMode) {
-                btn.innerHTML = '<i class="fas fa-check"></i> Terminar';
-                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
-                btn.style.color = 'white';
-            } else {
-                btn.innerHTML = '<i class="fas fa-edit"></i> Editar';
-                btn.style.background = '';
-                btn.style.color = '';
-            }
-            renderCameras();
-        }
-
-        function toggleNavPanel() {
-            const panel = document.getElementById('nav-panel');
-            if (panel.classList.contains('active')) {
-                panel.classList.remove('active');
-            } else {
-                panel.classList.add('active');
-                document.getElementById('assistant-panel').classList.remove('active');
-            }
-        }
-
-        function toggleAssistantPanel() {
-            const panel = document.getElementById('assistant-panel');
-            if (panel.classList.contains('active')) {
-                panel.classList.remove('active');
-            } else {
-                panel.classList.add('active');
-                document.getElementById('nav-panel').classList.remove('active');
-                updateTokenInfo();
-            }
-        }
-
-        function updateTokenInfo() {
-            const info = document.getElementById('token-info');
-            if (info) {
-                info.textContent = `Contexto: ${camerasData.length} cámaras`;
-            }
-        }
-
-        function exportData() {
-            try {
-                const exportData = {
-                    camaras: camerasData,
-                    sitios: sitesData,
-                    fecha: new Date().toISOString(),
-                    version: '3.0'
-                };
-                
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                const exportFileName = `sistema911_export_${new Date().toISOString().split('T')[0]}.json`;
-                
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileName);
-                linkElement.click();
-                
-                showNotification('📥 Datos exportados exitosamente', 'success');
-            } catch (error) {
-                console.error('Error exporting:', error);
-                showNotification('❌ Error al exportar datos', 'error');
-            }
-        }
-
-        function importData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        
-                        if (data.camaras && Array.isArray(data.camaras)) {
-                            if (confirm(`¿Importar ${data.camaras.length} cámaras? Esto reemplazará los datos actuales.`)) {
-                                camerasData = data.camaras;
-                                if (data.sitios) sitesData = data.sitios;
-                                saveData();
-                                applyAllFilters();
-                                showNotification(`✅ ${data.camaras.length} cámaras importadas exitosamente`, 'success');
-                            }
-                        } else {
-                            showNotification('❌ Formato de archivo inválido', 'error');
-                        }
-                    } catch (error) {
-                        console.error('Error importing:', error);
-                        showNotification('❌ Error al importar el archivo', 'error');
-                    }
-                };
-                reader.readAsText(file);
-            };
-            
-            input.click();
-        }
-
-        // UTILIDADES
-        function updateTime() {
-            const now = new Date();
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            const timeElement = document.getElementById('current-time');
-            if (timeElement) {
-                timeElement.textContent = now.toLocaleDateString('es-HN', options);
-            }
-        }
-
-        function updateMapTime() {
-            const timeElement = document.getElementById('map-update-time');
-            if (timeElement) {
-                timeElement.textContent = `Última actualización ${new Date().toLocaleTimeString('es-HN')}`;
-            }
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            
-            let bgGradient = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)';
-            let icon = 'info-circle';
-            
-            if (type === 'success') {
-                bgGradient = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
-                icon = 'check-circle';
-            } else if (type === 'error') {
-                bgGradient = 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)';
-                icon = 'exclamation-circle';
-            }
-            
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                border-radius: 0.75rem;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-                color: white;
-                z-index: 9999;
-                background: ${bgGradient};
-                animation: slideIn 0.3s ease-out;
-                max-width: 400px;
-            `;
-            
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <i class="fas fa-${icon}" style="font-size: 1.25rem;"></i>
-                    <span style="font-weight: 500;">${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                notification.style.transition = 'all 0.3s ease-out';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
-        }
-
-        // Cerrar modales al hacer clic fuera
+        // ==================== MANEJADORES DE EVENTOS ====================
         document.addEventListener('click', function(event) {
             const editModal = document.getElementById('edit-modal');
             const detailsModal = document.getElementById('details-modal');
@@ -2309,13 +3235,14 @@
             }
         });
 
-        // Atajos de teclado
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 const editModal = document.getElementById('edit-modal');
                 const detailsModal = document.getElementById('details-modal');
                 const siteModal = document.getElementById('site-modal');
                 const mapConfig = document.getElementById('map-config');
+                const learningModal = document.getElementById('learning-modal');
+                const deptModal = document.getElementById('dept-manager-modal');
                 
                 if (editModal.style.display === 'flex') {
                     closeModal();
@@ -2325,6 +3252,10 @@
                     closeSiteModal();
                 } else if (mapConfig.style.display === 'block') {
                     toggleMapConfig();
+                } else if (learningModal) {
+                    learningModal.remove();
+                } else if (deptModal) {
+                    closeDepartmentManager();
                 }
             }
             
@@ -2347,54 +3278,6 @@
                 exportData();
             }
         });
-
-        // Añadir animación para notificaciones
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            
-            @media print {
-                .nav-panel, .assistant-panel, .btn {
-                    display: none !important;
-                }
-                .main-content {
-                    width: 100% !important;
-                    max-width: 100% !important;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Inicialización del sistema
-        function initSystem() {
-            loadDeptFilterOptions();
-            loadMunFilterOptions('all');
-            updateDepartmentSelectors();
-            loadMapSettings();
-            updateTokenInfo();
-            
-            // Configurar event listeners para los selects de departamento en formularios
-            document.getElementById('camera-dept')?.addEventListener('change', function() {
-                updateMunicipioSelect('camera-dept', 'camera-mun');
-            });
-            
-            document.getElementById('site-dept')?.addEventListener('change', function() {
-                updateMunicipioSelect('site-dept', 'site-mun');
-            });
-            
-            console.log('%c🚀 Sistema 911 - Gestión de Cámaras', 'color: #667eea; font-size: 20px; font-weight: bold;');
-            console.log('%c✅ Sistema inicializado correctamente', 'color: #10b981; font-size: 14px;');
-            console.log(`%c📊 Estadísticas: ${camerasData.length} cámaras cargadas`, 'color: #3b82f6; font-size: 12px;');
-        }
     </script>
 </body>
 </html>
